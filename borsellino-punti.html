@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Borsellino Punti — v7 — 2026-10-10 -->
+<!-- Borsellino Punti — v8 — 2026-10-10 -->
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -71,7 +71,7 @@
   .logout-btn { font-size: 12px; color: #4285f4; background: none; border: none; cursor: pointer; padding: 2px 6px; font-family: inherit; }
   .refresh-btn { font-size: 12px; color: #4285f4; background: none; border: none; cursor: pointer; padding: 2px 6px; font-family: inherit; }
   .section-hidden { display: none; }
-  #fieldError { color: #dc2626; font-size: 13px; margin-top: 8px; display: none; }
+  #panelError { margin-top: 10px; }
 
   /* Tre tasti tipologia */
   .type-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
@@ -211,39 +211,6 @@
       <div class="quick-list" id="quickList"></div>
     </div>
 
-    <div class="action-card">
-      <details class="collapsible">
-        <summary>Inserimento manuale</summary>
-        <div>
-          <div class="field">
-            <label>Punti veloci</label>
-            <div class="presets">
-              <button class="preset-btn" onclick="setPoints(1)">1</button>
-              <button class="preset-btn" onclick="setPoints(2)">2</button>
-              <button class="preset-btn" onclick="setPoints(5)">5</button>
-              <button class="preset-btn" onclick="setPoints(10)">10</button>
-              <button class="preset-btn" onclick="setPoints(20)">20</button>
-              <button class="preset-btn" onclick="setPoints(50)">50</button>
-            </div>
-          </div>
-          <div class="field">
-            <label>Quantità</label>
-            <input type="number" id="pointsInput" placeholder="Es. 5" min="1" max="9999"
-              oninput="document.getElementById('fieldError').style.display='none'">
-          </div>
-          <div class="field">
-            <label>Nota (facoltativa)</label>
-            <textarea id="noteInput" placeholder="Es. Ha riordinato la cameretta"></textarea>
-          </div>
-          <div class="btn-row">
-            <button class="btn btn-add" onclick="addPoints()" id="btnAdd">+ Aggiungi</button>
-            <button class="btn btn-sub" onclick="subPoints()" id="btnSub">− Sottrai</button>
-          </div>
-          <div id="fieldError"></div>
-        </div>
-      </details>
-    </div>
-
     <div class="history-card">
       <div class="history-header">
         <h2>Storico operazioni</h2>
@@ -286,6 +253,7 @@ let tokenClient = null;
 let openType = null;
 let historyExpanded = false;
 const HISTORY_PAGE = 5;
+const FREE = '__libero__';   // voce "valore libero" nella tendina
 
 /* ---------- utilità ---------- */
 
@@ -526,28 +494,59 @@ function renderHistory() {
 function renderTypePanel(type) {
   const panel = document.getElementById('typePanel');
   const list = activePresets(type);
-  if (!list.length) {
-    panel.innerHTML = `<div class="panel-title">${escHtml(typeLabel(type))}</div>
-      <div class="panel-empty">Nessun preimpostato di questa tipologia.
-      Aggiungilo da <strong>Gestione preimpostati</strong>, qui sotto.</div>`;
-    return;
-  }
   const options = list.map(p => {
     const d = signedDelta(p.type, p.points);
     const sign = d > 0 ? '+' : '';
     return `<option value="${escHtml(p.id)}">${escHtml(p.description)} (${sign}${d})</option>`;
   }).join('');
+  // Senza preimpostati di questa tipologia si parte direttamente da valore libero.
+  const soloLibero = !list.length;
   panel.innerHTML = `
     <div class="panel-title">${escHtml(typeLabel(type))}</div>
     <div class="field">
-      <label>Scegli dall'elenco</label>
-      <select id="presetSelect">${options}</select>
+      <label>Cosa registri</label>
+      <select id="presetSelect" onchange="onPanelChoiceChange()">
+        ${options}
+        <option value="${FREE}"${soloLibero ? ' selected' : ''}>✎ Valore libero…</option>
+      </select>
     </div>
-    <div class="field">
+    <div class="field${soloLibero ? ' section-hidden' : ''}" id="presetExtraField">
       <label>Nota aggiuntiva (facoltativa)</label>
       <input type="text" id="presetNote" placeholder="Es. in cameretta">
     </div>
-    <button class="btn btn-${escHtml(type)}" onclick="applyPreset()">Registra</button>`;
+    <div id="freeFields" class="${soloLibero ? '' : 'section-hidden'}">
+      <div class="field">
+        <label>Punti</label>
+        <div class="presets">
+          <button class="preset-btn" type="button" data-act="free-points" data-id="1">1</button>
+          <button class="preset-btn" type="button" data-act="free-points" data-id="2">2</button>
+          <button class="preset-btn" type="button" data-act="free-points" data-id="5">5</button>
+          <button class="preset-btn" type="button" data-act="free-points" data-id="10">10</button>
+          <button class="preset-btn" type="button" data-act="free-points" data-id="20">20</button>
+          <button class="preset-btn" type="button" data-act="free-points" data-id="50">50</button>
+        </div>
+        <input type="number" id="freePoints" min="1" max="9999" placeholder="Es. 5">
+      </div>
+      <div class="field">
+        <label>Descrizione</label>
+        <input type="text" id="freeNote" placeholder="Es. Ha aiutato in cucina">
+      </div>
+    </div>
+    <button class="btn btn-${escHtml(type)}" data-act="register">Registra</button>
+    <div class="modal-err" id="panelError"></div>
+    ${soloLibero ? '<div class="hint">Nessun preimpostato di questa tipologia: puoi crearne da <strong>Gestione preimpostati</strong>, qui sotto.</div>' : ''}`;
+}
+
+function onPanelChoiceChange() {
+  const libero = document.getElementById('presetSelect').value === FREE;
+  document.getElementById('freeFields').classList.toggle('section-hidden', !libero);
+  document.getElementById('presetExtraField').classList.toggle('section-hidden', libero);
+  document.getElementById('panelError').style.display = 'none';
+}
+
+function setFreePoints(n) {
+  const el = document.getElementById('freePoints');
+  if (el) el.value = n;
 }
 
 function renderPresetList() {
@@ -667,16 +666,41 @@ function toggleTypePanel(type) {
   panel.classList.remove('section-hidden');
 }
 
-async function applyPreset() {
+function panelError(msg) {
+  const el = document.getElementById('panelError');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+/* Registra l'operazione del pannello aperto: o un preimpostato, o un valore
+   libero. In entrambi i casi la tipologia è quella del pannello, quindi ogni
+   operazione nasce classificata. */
+async function registerFromPanel() {
   const sel = document.getElementById('presetSelect');
-  if (!sel) return;
+  if (!sel || !openType) return;
+
+  if (sel.value === FREE) {
+    const punti = parseInt(document.getElementById('freePoints').value, 10);
+    if (!punti || punti <= 0 || isNaN(punti)) { panelError('Inserisci un numero di punti maggiore di zero.'); return; }
+    const nota = (document.getElementById('freeNote').value || '').trim();
+    const ok = await addEntry(signedDelta(openType, punti), nota, openType);
+    if (ok) {
+      const p = document.getElementById('freePoints'); if (p) p.value = '';
+      const n = document.getElementById('freeNote');   if (n) n.value = '';
+    }
+    return;
+  }
+
   const preset = (data.presets || []).find(p => p.id === sel.value);
-  if (!preset) { setStatus('Preimpostato non trovato.', 'error'); return; }
+  if (!preset) { panelError('Preimpostato non trovato. Premi ↻ Aggiorna.'); return; }
   const extra = (document.getElementById('presetNote').value || '').trim();
   const note = extra ? preset.description + ' — ' + extra : preset.description;
-  await addEntry(signedDelta(preset.type, preset.points), note, preset.type);
-  const noteEl = document.getElementById('presetNote');
-  if (noteEl) noteEl.value = '';
+  const ok = await addEntry(signedDelta(preset.type, preset.points), note, preset.type);
+  if (ok) {
+    const noteEl = document.getElementById('presetNote');
+    if (noteEl) noteEl.value = '';
+  }
 }
 
 async function repeatShortcut(id) {
@@ -685,48 +709,12 @@ async function repeatShortcut(id) {
   await addEntry(item.delta, item.note, item.type);
 }
 
-/* ---------- inserimento manuale ---------- */
-
-function setPoints(n) { document.getElementById('pointsInput').value = n; }
-
-function showError(msg) {
-  const el = document.getElementById('fieldError');
-  el.textContent = msg;
-  el.style.display = 'block';
-}
-
-function readManualPoints() {
-  const v = parseInt(document.getElementById('pointsInput').value, 10);
-  if (!v || v <= 0 || isNaN(v)) { showError('Inserisci un numero di punti valido.'); return null; }
-  return v;
-}
-
-async function addPoints() {
-  const v = readManualPoints();
-  if (v === null) return;
-  await manualEntry(+v);
-}
-
-async function subPoints() {
-  const v = readManualPoints();
-  if (v === null) return;
-  await manualEntry(-v);
-}
-
-async function manualEntry(delta) {
-  const note = document.getElementById('noteInput').value.trim();
-  const ok = await addEntry(delta, note, null);
-  if (ok) {
-    document.getElementById('pointsInput').value = '';
-    document.getElementById('noteInput').value = '';
-  }
-}
-
 /* ---------- scritture ---------- */
 
+// Blocca i comandi che scrivono mentre è in corso un salvataggio.
 function setBtnsDisabled(v) {
-  document.getElementById('btnAdd').disabled = v;
-  document.getElementById('btnSub').disabled = v;
+  document.querySelectorAll('.type-btn, #typePanel .btn, .quick-btn')
+    .forEach(b => { b.disabled = v; });
 }
 
 async function addEntry(delta, note, type) {
@@ -1139,6 +1127,8 @@ document.addEventListener('click', (ev) => {
     case 'save-profile': saveNewProfile(); break;
     case 'back-profile': openProfileModal(!currentProfile); break;
     case 'close-modal': closeModal(); break;
+    case 'register': registerFromPanel(); break;
+    case 'free-points': setFreePoints(id); break;
   }
 });
 
