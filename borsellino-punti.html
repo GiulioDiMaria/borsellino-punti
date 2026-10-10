@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Borsellino Punti — v3 — 2026-10-10 -->
+<!-- Borsellino Punti — v4 — 2026-10-10 -->
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -17,44 +17,104 @@
   .points-display.negative { color: #dc2626; }
   .points-label { font-size: 14px; color: #888; }
   .login-card { background: #fff; border-radius: 16px; padding: 32px 24px; text-align: center; border: 1px solid #e8e8e8; }
-  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: none; border-radius: 12px; cursor: pointer; font-size: 15px; font-weight: 500; padding: 12px 20px; width: 100%; transition: opacity 0.15s; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: none; border-radius: 12px; cursor: pointer; font-size: 15px; font-weight: 500; padding: 12px 20px; width: 100%; transition: opacity 0.15s; font-family: inherit; }
   .btn:active { opacity: 0.8; }
   .btn-google { background: #fff; color: #1a1a1a; border: 1.5px solid #e0e0e0; }
   .btn-add { background: #16a34a; color: #fff; }
   .btn-sub { background: #dc2626; color: #fff; }
+  .btn-neutral { background: #f0f0f0; color: #444; }
+  .btn-bonus { background: #16a34a; color: #fff; }
+  .btn-penalita { background: #dc2626; color: #fff; }
+  .btn-premio { background: #d97706; color: #fff; }
   .btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .action-card { background: #fff; border-radius: 16px; padding: 20px; margin-bottom: 16px; border: 1px solid #e8e8e8; }
   .action-card h2 { font-size: 15px; font-weight: 600; margin-bottom: 14px; color: #444; }
   .field { margin-bottom: 12px; }
   .field label { display: block; font-size: 13px; color: #666; margin-bottom: 4px; font-weight: 500; }
-  .field input, .field textarea { width: 100%; padding: 10px 12px; border: 1.5px solid #e0e0e0; border-radius: 10px; font-size: 15px; font-family: inherit; color: #1a1a1a; background: #fafafa; outline: none; transition: border-color 0.15s; }
-  .field input:focus, .field textarea:focus { border-color: #4285f4; background: #fff; }
+  .field input, .field textarea, .field select { width: 100%; padding: 10px 12px; border: 1.5px solid #e0e0e0; border-radius: 10px; font-size: 15px; font-family: inherit; color: #1a1a1a; background: #fafafa; outline: none; transition: border-color 0.15s; }
+  .field input:focus, .field textarea:focus, .field select:focus { border-color: #4285f4; background: #fff; }
   .field textarea { resize: none; height: 70px; }
   .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
   .presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
-  .preset-btn { border: 1.5px solid #e0e0e0; background: #fafafa; border-radius: 8px; padding: 5px 10px; font-size: 13px; cursor: pointer; color: #444; transition: all 0.15s; }
+  .preset-btn { border: 1.5px solid #e0e0e0; background: #fafafa; border-radius: 8px; padding: 5px 10px; font-size: 13px; cursor: pointer; color: #444; transition: all 0.15s; font-family: inherit; }
   .preset-btn:active { background: #e8e8e8; }
-  .history-card { background: #fff; border-radius: 16px; border: 1px solid #e8e8e8; overflow: hidden; }
+  .history-card { background: #fff; border-radius: 16px; border: 1px solid #e8e8e8; overflow: hidden; margin-bottom: 16px; }
   .history-header { padding: 16px 20px 12px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; }
   .history-header h2 { font-size: 15px; font-weight: 600; color: #444; }
   .history-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 20px; border-bottom: 1px solid #f5f5f5; }
   .history-item:last-child { border-bottom: none; }
+  .history-item.voided { background: #fcfcfc; }
+  .history-item.voided .history-delta, .history-item.voided .history-note { text-decoration: line-through; opacity: 0.5; }
   .history-delta { font-size: 17px; font-weight: 700; min-width: 48px; text-align: right; padding-top: 1px; }
   .history-delta.pos { color: #16a34a; }
   .history-delta.neg { color: #dc2626; }
-  .history-info { flex: 1; }
-  .history-note { font-size: 14px; color: #1a1a1a; }
+  .history-info { flex: 1; min-width: 0; }
+  .history-note { font-size: 14px; color: #1a1a1a; word-wrap: break-word; }
   .history-meta { font-size: 12px; color: #999; margin-top: 2px; }
+  .history-actions { display: flex; gap: 2px; flex-shrink: 0; }
+  .icon-btn { background: none; border: none; cursor: pointer; font-size: 14px; padding: 4px 6px; border-radius: 6px; color: #999; font-family: inherit; }
+  .icon-btn:active { background: #f0f0f0; }
   .history-empty { padding: 32px 20px; text-align: center; font-size: 14px; color: #aaa; }
   .status-bar { text-align: center; font-size: 12px; color: #aaa; padding: 12px 0 4px; }
   .status-bar.syncing { color: #4285f4; }
   .status-bar.error { color: #dc2626; }
   .user-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding: 10px 16px; background: #fff; border-radius: 12px; border: 1px solid #e8e8e8; }
   .user-name { font-size: 13px; color: #555; }
-  .logout-btn { font-size: 12px; color: #4285f4; background: none; border: none; cursor: pointer; padding: 2px 6px; }
-  .refresh-btn { font-size: 12px; color: #4285f4; background: none; border: none; cursor: pointer; padding: 2px 6px; }
+  .logout-btn { font-size: 12px; color: #4285f4; background: none; border: none; cursor: pointer; padding: 2px 6px; font-family: inherit; }
+  .refresh-btn { font-size: 12px; color: #4285f4; background: none; border: none; cursor: pointer; padding: 2px 6px; font-family: inherit; }
   .section-hidden { display: none; }
   #fieldError { color: #dc2626; font-size: 13px; margin-top: 8px; display: none; }
+
+  /* Tre tasti tipologia */
+  .type-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .type-btn { border: none; border-radius: 12px; padding: 14px 6px; cursor: pointer; font-size: 13px; font-weight: 600; color: #fff; font-family: inherit; line-height: 1.3; transition: opacity 0.15s; }
+  .type-btn:active { opacity: 0.8; }
+  .type-btn .ico { display: block; font-size: 20px; margin-bottom: 4px; }
+  .type-btn.bonus { background: #16a34a; }
+  .type-btn.penalita { background: #dc2626; }
+  .type-btn.premio { background: #d97706; }
+  .type-btn.open { outline: 3px solid rgba(66,133,244,0.35); }
+
+  /* Pannello a tendina per i preimpostati */
+  .type-panel { margin-top: 14px; padding-top: 14px; border-top: 1px solid #f0f0f0; }
+  .type-panel .panel-title { font-size: 13px; font-weight: 600; color: #444; margin-bottom: 10px; }
+  .panel-empty { font-size: 13px; color: #999; line-height: 1.5; }
+
+  /* Scorciatoie recenti */
+  .quick-list { display: flex; flex-direction: column; gap: 6px; }
+  .quick-btn { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; border: 1.5px solid #e8e8e8; background: #fafafa; border-radius: 10px; padding: 9px 12px; cursor: pointer; font-family: inherit; font-size: 14px; color: #1a1a1a; }
+  .quick-btn:active { background: #f0f0f0; }
+  .quick-delta { font-weight: 700; font-size: 15px; min-width: 42px; text-align: right; }
+  .quick-delta.pos { color: #16a34a; }
+  .quick-delta.neg { color: #dc2626; }
+  .quick-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Sezioni richiudibili */
+  .collapsible > summary { cursor: pointer; font-size: 15px; font-weight: 600; color: #444; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+  .collapsible > summary::-webkit-details-marker { display: none; }
+  .collapsible > summary::after { content: '▾'; color: #bbb; font-size: 13px; }
+  .collapsible[open] > summary::after { content: '▴'; }
+  .collapsible > summary + * { margin-top: 14px; }
+
+  /* Elenco preimpostati */
+  .pre-item { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid #f5f5f5; }
+  .pre-item:last-child { border-bottom: none; }
+  .pre-delta { font-weight: 700; font-size: 15px; min-width: 42px; text-align: right; }
+  .pre-delta.pos { color: #16a34a; }
+  .pre-delta.neg { color: #dc2626; }
+  .pre-info { flex: 1; min-width: 0; }
+  .pre-desc { font-size: 14px; word-wrap: break-word; }
+  .pre-type { font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 0.4px; }
+  .hint { font-size: 12px; color: #999; line-height: 1.5; margin-top: 10px; }
+
+  /* Finestra modale */
+  .modal-back { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 50; }
+  .modal { background: #fff; border-radius: 16px; padding: 20px; width: 100%; max-width: 420px; max-height: 90vh; overflow-y: auto; }
+  .modal h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+  .modal-err { color: #dc2626; font-size: 13px; margin-top: 8px; display: none; }
+  .import-report { font-size: 13px; line-height: 1.6; }
+  .import-report .ko { color: #dc2626; }
+  .import-report .ok { color: #16a34a; }
 </style>
 </head>
 <body>
@@ -98,32 +158,56 @@
     </div>
 
     <div class="action-card">
-      <h2>Aggiungi o sottrai punti</h2>
-      <div class="field">
-        <label>Punti veloci</label>
-        <div class="presets">
-          <button class="preset-btn" onclick="setPoints(1)">+1</button>
-          <button class="preset-btn" onclick="setPoints(2)">+2</button>
-          <button class="preset-btn" onclick="setPoints(5)">+5</button>
-          <button class="preset-btn" onclick="setPoints(10)">+10</button>
-          <button class="preset-btn" onclick="setPoints(20)">+20</button>
-          <button class="preset-btn" onclick="setPoints(50)">+50</button>
+      <div class="type-row">
+        <button class="type-btn bonus" id="typeBtn-bonus" onclick="toggleTypePanel('bonus')">
+          <span class="ico">👍</span>Aggiungi bonus
+        </button>
+        <button class="type-btn penalita" id="typeBtn-penalita" onclick="toggleTypePanel('penalita')">
+          <span class="ico">👎</span>Aggiungi penalità
+        </button>
+        <button class="type-btn premio" id="typeBtn-premio" onclick="toggleTypePanel('premio')">
+          <span class="ico">🎁</span>Aggiungi premio
+        </button>
+      </div>
+      <div id="typePanel" class="type-panel section-hidden"></div>
+    </div>
+
+    <div class="action-card" id="quickCard">
+      <h2>Usati di recente</h2>
+      <div class="quick-list" id="quickList"></div>
+    </div>
+
+    <div class="action-card">
+      <details class="collapsible">
+        <summary>Inserimento manuale</summary>
+        <div>
+          <div class="field">
+            <label>Punti veloci</label>
+            <div class="presets">
+              <button class="preset-btn" onclick="setPoints(1)">1</button>
+              <button class="preset-btn" onclick="setPoints(2)">2</button>
+              <button class="preset-btn" onclick="setPoints(5)">5</button>
+              <button class="preset-btn" onclick="setPoints(10)">10</button>
+              <button class="preset-btn" onclick="setPoints(20)">20</button>
+              <button class="preset-btn" onclick="setPoints(50)">50</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Quantità</label>
+            <input type="number" id="pointsInput" placeholder="Es. 5" min="1" max="9999"
+              oninput="document.getElementById('fieldError').style.display='none'">
+          </div>
+          <div class="field">
+            <label>Nota (facoltativa)</label>
+            <textarea id="noteInput" placeholder="Es. Ha riordinato la cameretta"></textarea>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-add" onclick="addPoints()" id="btnAdd">+ Aggiungi</button>
+            <button class="btn btn-sub" onclick="subPoints()" id="btnSub">− Sottrai</button>
+          </div>
+          <div id="fieldError"></div>
         </div>
-      </div>
-      <div class="field">
-        <label>Quantità</label>
-        <input type="number" id="pointsInput" placeholder="Es. 5" min="1" max="9999"
-          oninput="document.getElementById('fieldError').style.display='none'">
-      </div>
-      <div class="field">
-        <label>Nota (facoltativa)</label>
-        <textarea id="noteInput" placeholder="Es. Ha riordinato la cameretta"></textarea>
-      </div>
-      <div class="btn-row">
-        <button class="btn btn-add" onclick="addPoints()" id="btnAdd">+ Aggiungi</button>
-        <button class="btn btn-sub" onclick="subPoints()" id="btnSub">− Sottrai</button>
-      </div>
-      <div id="fieldError"></div>
+      </details>
     </div>
 
     <div class="history-card">
@@ -136,10 +220,32 @@
       </div>
     </div>
 
+    <div class="action-card">
+      <details class="collapsible" id="presetSection">
+        <summary>Gestione preimpostati</summary>
+        <div>
+          <div id="presetList"></div>
+          <div class="btn-row" style="margin-top:14px;">
+            <button class="btn btn-neutral" onclick="openPresetModal()">+ Nuovo</button>
+            <button class="btn btn-neutral" onclick="downloadTemplate()">↓ Template</button>
+          </div>
+          <button class="btn btn-neutral" style="margin-top:8px;" onclick="document.getElementById('csvFile').click()">↑ Carica elenco da file</button>
+          <input type="file" id="csvFile" accept=".csv,text/csv" style="display:none" onchange="handleCsvFile(this)">
+          <div class="hint">
+            Scarica il template, aprilo con Excel, compila le righe e ricaricalo:
+            i preimpostati con la stessa tipologia e descrizione vengono aggiornati,
+            gli altri aggiunti.
+          </div>
+        </div>
+      </details>
+    </div>
+
     <div class="status-bar" id="statusBar">Pronto</div>
   </div>
 
 </div>
+
+<div id="modalHost"></div>
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
@@ -147,9 +253,28 @@ const CLIENT_ID = '119147025794-3t4q6ei5n8buiv8ess7nbjt91ud3ahqe.apps.googleuser
 const SCOPES = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.profile';
 const FILE_NAME = 'borsellino-punti.json';
 
+const TYPES = {
+  bonus:    { label: 'Bonus',    sign: +1 },
+  penalita: { label: 'Penalità', sign: -1 },
+  premio:   { label: 'Premio',   sign: -1 }
+};
+
 let accessToken = null;
 let fileId = null;
+let data = { history: [], presets: [] };
 let tokenClient = null;
+let openType = null;
+
+/* ---------- utilità ---------- */
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function uid() {
+  return Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+}
 
 function setStatus(msg, type) {
   const s = document.getElementById('statusBar');
@@ -157,51 +282,286 @@ function setStatus(msg, type) {
   s.className = 'status-bar' + (type ? ' ' + type : '');
 }
 
-function computeBalance(history) {
-  return history.reduce((sum, item) => sum + item.delta, 0);
+function currentUser() {
+  const label = document.getElementById('userNameLabel').textContent;
+  return label.split(' · ')[0];
 }
 
-function updateDisplay(history) {
-  const balance = computeBalance(history);
+function typeLabel(t) {
+  return TYPES[t] ? TYPES[t].label : 'Manuale';
+}
+
+function signedDelta(type, points) {
+  const sign = TYPES[type] ? TYPES[type].sign : 1;
+  return sign * Math.abs(points);
+}
+
+/* ---------- modello: storico a sola aggiunta ----------
+   Una voce non viene mai modificata sul posto: correzioni e annullamenti
+   sono record aggiuntivi che puntano alla voce originale tramite targetId.
+   Così il merge fra due telefoni resta una semplice unione per id.      */
+
+function resolveHistory(history) {
+  const edits = new Map();
+  const states = new Map();
+  for (const h of history) {
+    if (h.kind === 'edit') {
+      const prev = edits.get(h.targetId);
+      if (!prev || String(h.date) > String(prev.date)) edits.set(h.targetId, h);
+    } else if (h.kind === 'void' || h.kind === 'unvoid') {
+      const prev = states.get(h.targetId);
+      if (!prev || String(h.date) > String(prev.date)) states.set(h.targetId, h);
+    }
+  }
+  return history
+    .filter(h => !h.kind || h.kind === 'entry')
+    .map(base => {
+      const e = edits.get(base.id);
+      const s = states.get(base.id);
+      return {
+        id: base.id,
+        delta: e ? e.delta : base.delta,
+        note: e ? e.note : base.note,
+        type: e ? e.type : base.type,
+        date: base.date,
+        who: base.who,
+        voided: !!s && s.kind === 'void',
+        edited: !!e,
+        editedBy: e ? e.who : null,
+        voidedBy: s && s.kind === 'void' ? s.who : null
+      };
+    });
+}
+
+function computeBalance(history) {
+  return resolveHistory(history)
+    .filter(item => !item.voided)
+    .reduce((sum, item) => sum + item.delta, 0);
+}
+
+function mergeHistory(base, incoming) {
+  const out = base.slice();
+  const ids = new Set(out.map(h => h.id));
+  for (const rec of incoming) {
+    if (!ids.has(rec.id)) { out.push(rec); ids.add(rec.id); }
+  }
+  out.sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  return out;
+}
+
+function mergePresets(base, incoming) {
+  const byId = new Map(base.map(p => [p.id, p]));
+  for (const p of incoming) {
+    const prev = byId.get(p.id);
+    if (!prev || String(p.updatedAt || '') >= String(prev.updatedAt || '')) byId.set(p.id, p);
+  }
+  return [...byId.values()];
+}
+
+function activePresets(type) {
+  return (data.presets || [])
+    .filter(p => !p.deleted && (!type || p.type === type))
+    .sort((a, b) => String(a.description).localeCompare(String(b.description), 'it'));
+}
+
+/* ---------- scorciatoie: ultime operazioni usate ---------- */
+
+function recentShortcuts(limit) {
+  const seen = new Set();
+  const out = [];
+  const items = resolveHistory(data.history || []).filter(i => !i.voided);
+  for (let i = items.length - 1; i >= 0 && out.length < limit; i--) {
+    const it = items[i];
+    const key = it.delta + '|' + (it.note || '');
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(it);
+  }
+  return out;
+}
+
+/* ---------- rendering ---------- */
+
+function renderAll() {
+  renderBalance();
+  renderQuick();
+  renderHistory();
+  renderPresetList();
+  if (openType) renderTypePanel(openType);
+}
+
+function renderBalance() {
+  const balance = computeBalance(data.history || []);
   const el = document.getElementById('pointsDisplay');
   el.textContent = balance;
   el.className = 'points-display ' + (balance >= 0 ? 'positive' : 'negative');
+}
 
-  document.getElementById('historyCount').textContent = history.length + ' voci';
+function renderQuick() {
+  const list = recentShortcuts(5);
+  const card = document.getElementById('quickCard');
+  const box = document.getElementById('quickList');
+  if (!list.length) { card.classList.add('section-hidden'); return; }
+  card.classList.remove('section-hidden');
+  box.innerHTML = list.map(it => {
+    const cls = it.delta > 0 ? 'pos' : 'neg';
+    const sign = it.delta > 0 ? '+' : '';
+    const text = it.note || '(nessuna nota)';
+    return `<button class="quick-btn" onclick="repeatShortcut('${escHtml(it.id)}')">
+      <span class="quick-delta ${cls}">${sign}${it.delta}</span>
+      <span class="quick-text">${escHtml(text)}</span>
+    </button>`;
+  }).join('');
+}
+
+function renderHistory() {
+  const items = resolveHistory(data.history || []);
+  const active = items.filter(i => !i.voided).length;
+  document.getElementById('historyCount').textContent =
+    active + (active === 1 ? ' voce' : ' voci');
 
   const list = document.getElementById('historyList');
-  if (!history.length) {
+  if (!items.length) {
     list.innerHTML = '<div class="history-empty">Nessuna operazione ancora.</div>';
     return;
   }
 
-  list.innerHTML = [...history].reverse().map(item => {
+  list.innerHTML = [...items].reverse().map(item => {
     const sign = item.delta > 0 ? '+' : '';
     const cls = item.delta > 0 ? 'pos' : 'neg';
     const dateStr = new Date(item.date).toLocaleString('it-IT', {
       day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'
     });
-    const who = item.who ? ` · ${escHtml(item.who)}` : '';
-    return `<div class="history-item">
+    const bits = [dateStr];
+    if (item.who) bits.push(escHtml(item.who));
+    if (item.type) bits.push(escHtml(typeLabel(item.type)));
+    if (item.edited) bits.push('modificata');
+    if (item.voided) bits.push('annullata');
+    const actions = item.voided
+      ? `<button class="icon-btn" title="Ripristina" onclick="restoreEntry('${escHtml(item.id)}')">↩</button>`
+      : `<button class="icon-btn" title="Modifica" onclick="openEditModal('${escHtml(item.id)}')">✏️</button>
+         <button class="icon-btn" title="Annulla" onclick="voidEntry('${escHtml(item.id)}')">✕</button>`;
+    return `<div class="history-item${item.voided ? ' voided' : ''}">
       <div class="history-delta ${cls}">${sign}${item.delta}</div>
       <div class="history-info">
         <div class="history-note">${escHtml(item.note || '(nessuna nota)')}</div>
-        <div class="history-meta">${dateStr}${who}</div>
+        <div class="history-meta">${bits.join(' · ')}</div>
+      </div>
+      <div class="history-actions">${actions}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderTypePanel(type) {
+  const panel = document.getElementById('typePanel');
+  const list = activePresets(type);
+  if (!list.length) {
+    panel.innerHTML = `<div class="panel-title">${escHtml(typeLabel(type))}</div>
+      <div class="panel-empty">Nessun preimpostato di questa tipologia.
+      Aggiungilo da <strong>Gestione preimpostati</strong>, in fondo alla pagina.</div>`;
+    return;
+  }
+  const options = list.map(p => {
+    const d = signedDelta(p.type, p.points);
+    const sign = d > 0 ? '+' : '';
+    return `<option value="${escHtml(p.id)}">${escHtml(p.description)} (${sign}${d})</option>`;
+  }).join('');
+  panel.innerHTML = `
+    <div class="panel-title">${escHtml(typeLabel(type))}</div>
+    <div class="field">
+      <label>Scegli dall'elenco</label>
+      <select id="presetSelect">${options}</select>
+    </div>
+    <div class="field">
+      <label>Nota aggiuntiva (facoltativa)</label>
+      <input type="text" id="presetNote" placeholder="Es. in cameretta">
+    </div>
+    <button class="btn btn-${escHtml(type)}" onclick="applyPreset()">Registra</button>`;
+}
+
+function renderPresetList() {
+  const box = document.getElementById('presetList');
+  const list = activePresets(null);
+  if (!list.length) {
+    box.innerHTML = '<div class="panel-empty">Nessun preimpostato. Creane uno o carica un elenco da file.</div>';
+    return;
+  }
+  box.innerHTML = list.map(p => {
+    const d = signedDelta(p.type, p.points);
+    const sign = d > 0 ? '+' : '';
+    return `<div class="pre-item">
+      <div class="pre-delta ${d > 0 ? 'pos' : 'neg'}">${sign}${d}</div>
+      <div class="pre-info">
+        <div class="pre-desc">${escHtml(p.description)}</div>
+        <div class="pre-type">${escHtml(typeLabel(p.type))}</div>
+      </div>
+      <div class="history-actions">
+        <button class="icon-btn" title="Modifica" onclick="openPresetModal('${escHtml(p.id)}')">✏️</button>
+        <button class="icon-btn" title="Elimina" onclick="deletePreset('${escHtml(p.id)}')">🗑</button>
       </div>
     </div>`;
   }).join('');
 }
 
-function escHtml(str) {
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+/* ---------- finestra modale ---------- */
+
+function closeModal() { document.getElementById('modalHost').innerHTML = ''; }
+
+function showModal(title, bodyHtml) {
+  document.getElementById('modalHost').innerHTML =
+    `<div class="modal-back" onclick="if(event.target===this) closeModal()">
+       <div class="modal">
+         <h3>${escHtml(title)}</h3>
+         ${bodyHtml}
+       </div>
+     </div>`;
 }
+
+function modalError(msg) {
+  const el = document.getElementById('modalErr');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+/* ---------- tre tasti tipologia ---------- */
+
+function toggleTypePanel(type) {
+  const panel = document.getElementById('typePanel');
+  for (const t of Object.keys(TYPES)) {
+    document.getElementById('typeBtn-' + t).classList.toggle('open', t === type && openType !== type);
+  }
+  if (openType === type) {
+    openType = null;
+    panel.classList.add('section-hidden');
+    return;
+  }
+  openType = type;
+  renderTypePanel(type);
+  panel.classList.remove('section-hidden');
+}
+
+async function applyPreset() {
+  const sel = document.getElementById('presetSelect');
+  if (!sel) return;
+  const preset = (data.presets || []).find(p => p.id === sel.value);
+  if (!preset) { setStatus('Preimpostato non trovato.', 'error'); return; }
+  const extra = (document.getElementById('presetNote').value || '').trim();
+  const note = extra ? preset.description + ' — ' + extra : preset.description;
+  await addEntry(signedDelta(preset.type, preset.points), note, preset.type);
+  const noteEl = document.getElementById('presetNote');
+  if (noteEl) noteEl.value = '';
+}
+
+async function repeatShortcut(id) {
+  const item = resolveHistory(data.history || []).find(i => i.id === id);
+  if (!item) return;
+  await addEntry(item.delta, item.note, item.type);
+}
+
+/* ---------- inserimento manuale ---------- */
 
 function setPoints(n) { document.getElementById('pointsInput').value = n; }
-
-function setBtnsDisabled(v) {
-  document.getElementById('btnAdd').disabled = v;
-  document.getElementById('btnSub').disabled = v;
-}
 
 function showError(msg) {
   const el = document.getElementById('fieldError');
@@ -209,53 +569,309 @@ function showError(msg) {
   el.style.display = 'block';
 }
 
-async function addPoints() {
+function readManualPoints() {
   const v = parseInt(document.getElementById('pointsInput').value, 10);
-  if (!v || v <= 0 || isNaN(v)) { showError('Inserisci un numero di punti valido.'); return; }
-  await applyDelta(+v);
+  if (!v || v <= 0 || isNaN(v)) { showError('Inserisci un numero di punti valido.'); return null; }
+  return v;
+}
+
+async function addPoints() {
+  const v = readManualPoints();
+  if (v === null) return;
+  await manualEntry(+v);
 }
 
 async function subPoints() {
-  const v = parseInt(document.getElementById('pointsInput').value, 10);
-  if (!v || v <= 0 || isNaN(v)) { showError('Inserisci un numero di punti valido.'); return; }
-  await applyDelta(-v);
+  const v = readManualPoints();
+  if (v === null) return;
+  await manualEntry(-v);
 }
 
-async function applyDelta(delta) {
+async function manualEntry(delta) {
   const note = document.getElementById('noteInput').value.trim();
-  setBtnsDisabled(true);
-  setStatus('Salvataggio...', 'syncing');
-
-  const newEntry = {
-    id: Date.now() + '_' + Math.random().toString(36).slice(2, 7),
-    delta,
-    note,
-    date: new Date().toISOString(),
-    who: document.getElementById('userNameLabel').textContent.split(' · ')[0]
-  };
-
-  try {
-    // Leggi la versione più recente dal Drive prima di scrivere
-    const current = await loadFileRaw();
-    const history = current.history || [];
-
-    // Merge: aggiungi la nuova voce solo se non già presente (per id)
-    const ids = new Set(history.map(h => h.id));
-    if (!ids.has(newEntry.id)) history.push(newEntry);
-
-    // Ordina per data
-    history.sort((a, b) => a.date.localeCompare(b.date));
-
-    await saveFileRaw({ history });
-    updateDisplay(history);
-
+  const ok = await addEntry(delta, note, null);
+  if (ok) {
     document.getElementById('pointsInput').value = '';
     document.getElementById('noteInput').value = '';
-    setStatus('Salvato ✓');
-  } catch(e) {
-    setStatus('Errore: ' + e.message, 'error');
   }
-  setBtnsDisabled(false);
+}
+
+/* ---------- scritture ---------- */
+
+function setBtnsDisabled(v) {
+  document.getElementById('btnAdd').disabled = v;
+  document.getElementById('btnSub').disabled = v;
+}
+
+async function addEntry(delta, note, type) {
+  return commit('Salvataggio...', 'Salvato ✓', {
+    history: [{
+      id: uid(), kind: 'entry', delta, note: note || '', type: type || null,
+      date: new Date().toISOString(), who: currentUser()
+    }]
+  });
+}
+
+async function voidEntry(id) {
+  if (!confirm('Annullare questa operazione? Il saldo verrà ricalcolato senza di essa.')) return;
+  await commit('Annullamento...', 'Annullata ✓', {
+    history: [{ id: uid(), kind: 'void', targetId: id, date: new Date().toISOString(), who: currentUser() }]
+  });
+}
+
+async function restoreEntry(id) {
+  await commit('Ripristino...', 'Ripristinata ✓', {
+    history: [{ id: uid(), kind: 'unvoid', targetId: id, date: new Date().toISOString(), who: currentUser() }]
+  });
+}
+
+function openEditModal(id) {
+  const item = resolveHistory(data.history || []).find(i => i.id === id);
+  if (!item) return;
+  showModal('Modifica operazione', `
+    <div class="field">
+      <label>Punti (con il segno)</label>
+      <input type="number" id="editDelta" value="${item.delta}">
+    </div>
+    <div class="field">
+      <label>Nota</label>
+      <textarea id="editNote">${escHtml(item.note || '')}</textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-add" onclick="saveEdit('${escHtml(id)}')">Salva</button>
+      <button class="btn btn-neutral" onclick="closeModal()">Annulla</button>
+    </div>
+    <div class="modal-err" id="modalErr"></div>
+    <div class="hint">La voce originale resta nello storico come corretta: così la
+      modifica si propaga senza conflitti anche sull'altro telefono.</div>`);
+}
+
+async function saveEdit(id) {
+  const delta = parseInt(document.getElementById('editDelta').value, 10);
+  if (isNaN(delta) || delta === 0) { modalError('Inserisci un numero diverso da zero.'); return; }
+  const note = document.getElementById('editNote').value.trim();
+  const item = resolveHistory(data.history || []).find(i => i.id === id);
+  closeModal();
+  await commit('Salvataggio...', 'Modificata ✓', {
+    history: [{
+      id: uid(), kind: 'edit', targetId: id, delta, note,
+      type: item ? item.type : null,
+      date: new Date().toISOString(), who: currentUser()
+    }]
+  });
+}
+
+/* ---------- preimpostati ---------- */
+
+function openPresetModal(id) {
+  const p = id ? (data.presets || []).find(x => x.id === id) : null;
+  const opts = Object.keys(TYPES).map(t =>
+    `<option value="${t}"${p && p.type === t ? ' selected' : ''}>${escHtml(TYPES[t].label)}</option>`
+  ).join('');
+  showModal(p ? 'Modifica preimpostato' : 'Nuovo preimpostato', `
+    <div class="field">
+      <label>Tipologia</label>
+      <select id="preType">${opts}</select>
+    </div>
+    <div class="field">
+      <label>Punti (sempre positivo: il segno lo decide la tipologia)</label>
+      <input type="number" id="prePoints" min="1" max="9999" value="${p ? Math.abs(p.points) : ''}">
+    </div>
+    <div class="field">
+      <label>Descrizione</label>
+      <input type="text" id="preDesc" value="${p ? escHtml(p.description) : ''}" placeholder="Es. Ha riordinato la cameretta">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-add" onclick="savePreset(${p ? "'" + escHtml(p.id) + "'" : 'null'})">Salva</button>
+      <button class="btn btn-neutral" onclick="closeModal()">Annulla</button>
+    </div>
+    <div class="modal-err" id="modalErr"></div>`);
+}
+
+async function savePreset(id) {
+  const type = document.getElementById('preType').value;
+  const points = parseInt(document.getElementById('prePoints').value, 10);
+  const description = document.getElementById('preDesc').value.trim();
+  if (!points || points <= 0 || isNaN(points)) { modalError('Inserisci un numero di punti positivo.'); return; }
+  if (!description) { modalError('La descrizione è obbligatoria.'); return; }
+  closeModal();
+  await commit('Salvataggio...', 'Preimpostato salvato ✓', {
+    presets: [{
+      id: id || uid(), type, points: Math.abs(points), description,
+      deleted: false, updatedAt: new Date().toISOString()
+    }]
+  });
+}
+
+async function deletePreset(id) {
+  const p = (data.presets || []).find(x => x.id === id);
+  if (!p) return;
+  if (!confirm('Eliminare "' + p.description + '" dai preimpostati? Le operazioni già registrate restano.')) return;
+  await commit('Eliminazione...', 'Preimpostato eliminato ✓', {
+    presets: [{ ...p, deleted: true, updatedAt: new Date().toISOString() }]
+  });
+}
+
+/* ---------- template CSV per Excel ---------- */
+
+function csvCell(v) {
+  const s = String(v == null ? '' : v);
+  return /[";\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+function buildCsv(presets) {
+  const rows = [['tipologia', 'punti', 'descrizione']];
+  if (presets.length) {
+    for (const p of presets) rows.push([p.type, Math.abs(p.points), p.description]);
+  } else {
+    rows.push(['bonus', 5, 'Ha riordinato la cameretta']);
+    rows.push(['penalita', 3, 'Ha risposto male']);
+    rows.push(['premio', 50, 'Un pomeriggio al cinema']);
+  }
+  return rows.map(r => r.map(csvCell).join(';')).join('\r\n') + '\r\n';
+}
+
+function downloadTemplate() {
+  // Il BOM serve a far leggere gli accenti correttamente a Excel.
+  const blob = new Blob(['﻿' + buildCsv(activePresets(null))],
+                        { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'borsellino-preimpostati.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+function splitCsvLine(line, sep) {
+  const out = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQ) {
+      if (ch === '"') {
+        if (line[i + 1] === '"') { cur += '"'; i++; } else inQ = false;
+      } else cur += ch;
+    } else if (ch === '"') inQ = true;
+    else if (ch === sep) { out.push(cur); cur = ''; }
+    else cur += ch;
+  }
+  out.push(cur);
+  return out.map(s => s.trim());
+}
+
+function normalizeType(raw) {
+  const s = String(raw || '').trim().toLowerCase()
+    .replace(/à/g, 'a').replace(/è|é/g, 'e').replace(/ì/g, 'i').replace(/ò/g, 'o').replace(/ù/g, 'u');
+  if (s === 'bonus') return 'bonus';
+  if (s === 'penalita') return 'penalita';
+  if (s === 'premio') return 'premio';
+  return null;
+}
+
+function parseCsv(text) {
+  const clean = text.replace(/^﻿/, '').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const lines = clean.split('\n').filter(l => l.trim() !== '');
+  if (!lines.length) return { rows: [], errors: ['Il file è vuoto.'] };
+
+  const sep = (lines[0].split(';').length >= lines[0].split(',').length) ? ';' : ',';
+  const header = splitCsvLine(lines[0], sep).map(h => h.toLowerCase());
+  let start = 0;
+  if (header[0] === 'tipologia' || header[1] === 'punti') start = 1;
+
+  const rows = [], errors = [];
+  for (let i = start; i < lines.length; i++) {
+    const cells = splitCsvLine(lines[i], sep);
+    const n = i + 1;
+    const type = normalizeType(cells[0]);
+    const points = parseInt(String(cells[1] || '').replace(',', '.'), 10);
+    const description = (cells[2] || '').trim();
+    if (!type) { errors.push(`Riga ${n}: tipologia "${cells[0] || ''}" non valida (usa bonus, penalita o premio).`); continue; }
+    if (!points || points <= 0 || isNaN(points)) { errors.push(`Riga ${n}: punti "${cells[1] || ''}" non validi (serve un numero maggiore di zero).`); continue; }
+    if (!description) { errors.push(`Riga ${n}: manca la descrizione.`); continue; }
+    rows.push({ type, points, description });
+  }
+  return { rows, errors };
+}
+
+function handleCsvFile(input) {
+  const file = input.files && input.files[0];
+  input.value = '';
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => importCsv(String(reader.result));
+  reader.onerror = () => setStatus('Impossibile leggere il file.', 'error');
+  reader.readAsText(file, 'utf-8');
+}
+
+function buildImport(rows) {
+  // Stessa tipologia + stessa descrizione = aggiornamento, non doppione.
+  const existing = new Map();
+  for (const p of (data.presets || [])) {
+    if (!p.deleted) existing.set(p.type + '|' + p.description.trim().toLowerCase(), p);
+  }
+  const now = new Date().toISOString();
+  const upserts = [];
+  let added = 0, updated = 0;
+  for (const r of rows) {
+    const prev = existing.get(r.type + '|' + r.description.toLowerCase());
+    if (prev) {
+      if (Math.abs(prev.points) === r.points) continue;
+      upserts.push({ ...prev, points: r.points, updatedAt: now });
+      updated++;
+    } else {
+      upserts.push({ id: uid(), type: r.type, points: r.points, description: r.description, deleted: false, updatedAt: now });
+      added++;
+    }
+  }
+  return { upserts, added, updated };
+}
+
+async function importCsv(text) {
+  const { rows, errors } = parseCsv(text);
+  const { upserts, added, updated } = buildImport(rows);
+
+  const parts = [];
+  if (added) parts.push(`<div class="ok">${added} nuovi preimpostati.</div>`);
+  if (updated) parts.push(`<div class="ok">${updated} aggiornati.</div>`);
+  if (!added && !updated) parts.push('<div>Nessuna modifica da applicare.</div>');
+  if (errors.length) {
+    parts.push(`<div class="ko" style="margin-top:8px;">${errors.length} righe scartate:</div>`);
+    parts.push('<div class="ko">' + errors.slice(0, 12).map(escHtml).join('<br>') + '</div>');
+    if (errors.length > 12) parts.push(`<div class="ko">… e altre ${errors.length - 12}.</div>`);
+  }
+  showModal('Caricamento elenco', `<div class="import-report">${parts.join('')}</div>
+    <button class="btn btn-neutral" style="margin-top:16px;" onclick="closeModal()">Chiudi</button>`);
+
+  if (upserts.length) {
+    await commit('Caricamento...', 'Elenco caricato ✓', { presets: upserts });
+  }
+}
+
+/* ---------- Google Drive ---------- */
+
+async function commit(busyMsg, doneMsg, changes) {
+  setBtnsDisabled(true);
+  setStatus(busyMsg, 'syncing');
+  try {
+    // Rileggi sempre la versione più recente prima di scrivere, così le
+    // modifiche fatte dall'altro telefono non vengono sovrascritte.
+    const remote = await loadFileRaw();
+    data = {
+      history: mergeHistory(remote.history || [], changes.history || []),
+      presets: mergePresets(remote.presets || [], changes.presets || [])
+    };
+    await saveFileRaw(data);
+    renderAll();
+    setStatus(doneMsg);
+    setBtnsDisabled(false);
+    return true;
+  } catch (e) {
+    setStatus('Errore: ' + e.message, 'error');
+    setBtnsDisabled(false);
+    return false;
+  }
 }
 
 async function driveRequest(url, opts) {
@@ -268,19 +884,21 @@ async function driveRequest(url, opts) {
 }
 
 async function loadFileRaw() {
-  const r = await driveRequest(`/files?spaces=appDataFolder&q=name='${FILE_NAME}'&fields=files(id)`);
+  const q = encodeURIComponent("name='" + FILE_NAME + "'");
+  const r = await driveRequest(`/files?spaces=appDataFolder&q=${q}&fields=files(id)`);
   const json = await r.json();
   if (json.files && json.files.length > 0) {
     fileId = json.files[0].id;
     const dl = await driveRequest(`/files/${fileId}?alt=media`);
-    return await dl.json();
+    const content = await dl.json();
+    return { history: content.history || [], presets: content.presets || [] };
   }
   fileId = null;
-  return { history: [] };
+  return { history: [], presets: [] };
 }
 
-async function saveFileRaw(data) {
-  const body = JSON.stringify(data, null, 2);
+async function saveFileRaw(payload) {
+  const body = JSON.stringify(payload, null, 2);
   const metadata = { name: FILE_NAME, ...(fileId ? {} : { parents: ['appDataFolder'] }) };
   const form = new FormData();
   form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
@@ -303,13 +921,15 @@ async function saveFileRaw(data) {
 async function refreshData() {
   setStatus('Aggiornamento...', 'syncing');
   try {
-    const data = await loadFileRaw();
-    updateDisplay(data.history || []);
+    data = await loadFileRaw();
+    renderAll();
     setStatus('Aggiornato ✓');
   } catch(e) {
     setStatus('Errore: ' + e.message, 'error');
   }
 }
+
+/* ---------- accesso ---------- */
 
 function showLogin() {
   document.getElementById('loginSection').style.display = '';
@@ -346,8 +966,8 @@ async function afterLogin() {
     document.getElementById('userNameLabel').textContent = (me.name || me.email) + ' · Google Drive';
   } catch(e) {}
   try {
-    const data = await loadFileRaw();
-    updateDisplay(data.history || []);
+    data = await loadFileRaw();
+    renderAll();
     setStatus('Sincronizzato ✓');
   } catch(e) {
     setStatus('Errore caricamento: ' + e.message, 'error');
@@ -357,6 +977,7 @@ async function afterLogin() {
 function logout() {
   if (accessToken) google.accounts.oauth2.revoke(accessToken);
   accessToken = null; fileId = null;
+  data = { history: [], presets: [] };
   sessionStorage.removeItem('g_token');
   showLogin();
 }
