@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Borsellino Punti — v8 — 2026-10-10 -->
+<!-- Borsellino Punti — v9 — 2026-10-10 -->
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -72,6 +72,7 @@
   .refresh-btn { font-size: 12px; color: #4285f4; background: none; border: none; cursor: pointer; padding: 2px 6px; font-family: inherit; }
   .section-hidden { display: none; }
   #panelError { margin-top: 10px; }
+  .piggy { display: block; margin: 0 auto 8px; }
 
   /* Tre tasti tipologia */
   .type-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
@@ -130,7 +131,31 @@
 
   <div id="loginSection">
     <div style="text-align:center; padding: 40px 0 24px;">
-      <div style="font-size:48px; margin-bottom:8px;">⭐</div>
+      <svg class="piggy" viewBox="0 0 64 64" width="72" height="72" role="img" aria-label="Salvadanaio">
+        <!-- moneta che entra nella fessura -->
+        <circle cx="37" cy="19" r="6.5" fill="#fbbf24"/>
+        <circle cx="37" cy="19" r="3.7" fill="#f59e0b" opacity="0.45"/>
+        <!-- codino -->
+        <path d="M9 33 q-6 -1 -5 -5 q1 -3 4 -1" fill="none" stroke="#ec8aae"
+              stroke-width="2.6" stroke-linecap="round"/>
+        <!-- orecchio, dietro al corpo -->
+        <path d="M19 24 L25 14 L29 22 Z" fill="#ec8aae" stroke="#ec8aae"
+              stroke-width="3" stroke-linejoin="round"/>
+        <!-- zampe -->
+        <rect x="18" y="46" width="7" height="9" rx="3" fill="#ec8aae"/>
+        <rect x="38" y="46" width="7" height="9" rx="3" fill="#ec8aae"/>
+        <!-- corpo -->
+        <ellipse cx="31" cy="36" rx="23" ry="16" fill="#f7a8c4"/>
+        <!-- fessura -->
+        <rect x="30" y="25" width="14" height="3.4" rx="1.7" fill="#c2638a"
+              transform="rotate(-6 37 26.7)"/>
+        <!-- occhio -->
+        <circle cx="43" cy="33" r="2" fill="#7a3b56"/>
+        <!-- muso -->
+        <ellipse cx="52" cy="38" rx="8" ry="6.5" fill="#ec8aae"/>
+        <ellipse cx="50" cy="38" rx="1.3" ry="1.9" fill="#c2638a"/>
+        <ellipse cx="54.5" cy="38" rx="1.3" ry="1.9" fill="#c2638a"/>
+      </svg>
       <h1 style="font-size:22px; font-weight:700; margin-bottom:6px;">Borsellino Punti</h1>
       <p style="font-size:14px; color:#888;">Gestisci i punti di tuo figlio,<br>sincronizzati su Google Drive</p>
     </div>
