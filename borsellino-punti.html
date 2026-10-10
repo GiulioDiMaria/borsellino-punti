@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Borsellino Punti — v6 — 2026-10-10 -->
+<!-- Borsellino Punti — v7 — 2026-10-10 -->
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -180,7 +180,7 @@
           <span class="ico">👎</span>Aggiungi penalità
         </button>
         <button class="type-btn premio" id="typeBtn-premio" onclick="toggleTypePanel('premio')">
-          <span class="ico">🎁</span>Aggiungi premio
+          <span class="ico">🎁</span>Riscatta Premio
         </button>
       </div>
       <div id="typePanel" class="type-panel section-hidden"></div>
@@ -529,7 +529,7 @@ function renderTypePanel(type) {
   if (!list.length) {
     panel.innerHTML = `<div class="panel-title">${escHtml(typeLabel(type))}</div>
       <div class="panel-empty">Nessun preimpostato di questa tipologia.
-      Aggiungilo da <strong>Gestione preimpostati</strong>, in fondo alla pagina.</div>`;
+      Aggiungilo da <strong>Gestione preimpostati</strong>, qui sotto.</div>`;
     return;
   }
   const options = list.map(p => {
