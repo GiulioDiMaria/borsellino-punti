@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Borsellino Punti</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f5f5f5; color: #1a1a1a; min-height: 100vh;
+  }
+  .app { max-width: 480px; margin: 0 auto; padding: 16px; }
+  .header {
+    background: #fff; border-radius: 16px; padding: 20px;
+    margin-bottom: 16px; border: 1px solid #e8e8e8; text-align: center;
+  }
+  .header h1 { font-size: 20px; font-weight: 600; color: #1a1a1a; margin-bottom: 4px; }
+  .header .subtitle { font-size: 13px; color: #888; }
+  .points-display { margin: 16px 0 4px; font-size: 56px; font-weight: 700; line-height: 1; }
+  .points-display.positive { color: #16a34a; }
+  .points-display.negative { color: #dc2626; }
+  .points-label { font-size: 14px; color: #888; }
+  .login-card {
+    background: #fff; border-radius: 16px; padding: 32px 24px;
+    text-align: center; border: 1px solid #e8e8e8;
+  }
+  .login-card h2 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+  .login-card p { font-size: 14px; color: #666; margin-bottom: 24px; line-height: 1.5; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    border: none; border-radius: 12px; cursor: pointer;
+    font-size: 15px; font-weight: 500; padding: 12px 20px;
+    width: 100%; transition: opacity 0.15s;
+  }
+  .btn:active { opacity: 0.8; }
+  .btn-google { background: #fff; color: #1a1a1a; border: 1.5px solid #e0e0e0; }
+  .btn-add { background: #16a34a; color: #fff; }
+  .btn-sub { background: #dc2626; color: #fff; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .action-card {
+    background: #fff; border-radius: 16px; padding: 20px;
+    margin-bottom: 16px; border: 1px solid #e8e8e8;
+  }
+  .action-card h2 { font-size: 15px; font-weight: 600; margin-bottom: 14px; color: #444; }
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 13px; color: #666; margin-bottom: 4px; font-weight: 500; }
+  .field input, .field textarea {
+    width: 100%; padding: 10px 12px;
+    border: 1.5px solid #e0e0e0; border-radius: 10px;
+    font-size: 15px; font-family: inherit; color: #1a1a1a;
+    background: #fafafa; outline: none; transition: border-color 0.15s;
+  }
+  .field input:focus, .field textarea:focus { border-color: #4285f4; background: #fff; }
+  .field textarea { resize: none; height: 70px; }
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+  .presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .preset-btn {
+    border: 1.5px solid #e0e0e0; background: #fafafa;
+    border-radius: 8px; padding: 5px 10px;
+    font-size: 13px; cursor: pointer; color: #444; transition: all 0.15s;
+  }
+  .preset-btn:active { background: #e8e8e8; }
+  .history-card {
+    background: #fff; border-radius: 16px;
+    border: 1px solid #e8e8e8; overflow: hidden;
+  }
+  .history-header {
+    padding: 16px 20px 12px; border-bottom: 1px solid #f0f0f0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .history-header h2 { font-size: 15px; font-weight: 600; color: #444; }
+  .history-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 12px 20px; border-bottom: 1px solid #f5f5f5;
+  }
+  .history-item:last-child { border-bottom: none; }
+  .history-delta { font-size: 17px; font-weight: 700; min-width: 48px; text-align: right; padding-top: 1px; }
+  .history-delta.pos { color: #16a34a; }
+  .history-delta.neg { color: #dc2626; }
+  .history-info { flex: 1; }
+  .history-note { font-size: 14px; color: #1a1a1a; }
+  .history-date { font-size: 12px; color: #999; margin-top: 2px; }
+  .history-empty { padding: 32px 20px; text-align: center; font-size: 14px; color: #aaa; }
+  .status-bar { text-align: center; font-size: 12px; color: #aaa; padding: 12px 0 4px; }
+  .status-bar.syncing { color: #4285f4; }
+  .status-bar.error { color: #dc2626; }
+  .user-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px; padding: 10px 16px;
+    background: #fff; border-radius: 12px; border: 1px solid #e8e8e8;
+  }
+  .user-name { font-size: 13px; color: #555; }
+  .logout-btn { font-size: 12px; color: #4285f4; background: none; border: none; cursor: pointer; padding: 2px 6px; }
+  .section-hidden { display: none; }
+  #fieldError { color: #dc2626; font-size: 13px; margin-top: 8px; display: none; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div id="loginSection">
+    <div style="text-align:center; padding: 40px 0 24px;">
+      <div style="font-size:48px; margin-bottom:8px;">⭐</div>
+      <h1 style="font-size:22px; font-weight:700; margin-bottom:6px;">Borsellino Punti</h1>
+      <p style="font-size:14px; color:#888;">Gestisci i punti di tuo figlio,<br>sincronizzati su Google Drive</p>
+    </div>
+    <div class="login-card">
+      <p style="font-size:14px; color:#555; margin-bottom:20px; line-height:1.6;">
+        L'app salverà i dati in un file <strong>borsellino-punti.json</strong>
+        nel tuo Google Drive. Accedi con lo stesso account Google su entrambi
+        i telefoni per condividere i punti.
+      </p>
+      <button class="btn btn-google" onclick="loginGoogle()">
+        <svg width="18" height="18" viewBox="0 0 48 48">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        Accedi con Google
+      </button>
+      <p style="font-size:12px; color:#aaa; margin-top:16px;">
+        Per condividere i punti, entrambi i telefoni devono accedere<br>con lo stesso account Google.
+      </p>
+    </div>
+  </div>
+
+  <div id="appSection" class="section-hidden">
+
+    <div class="user-row">
+      <span class="user-name" id="userNameLabel">Caricamento...</span>
+      <button class="logout-btn" onclick="logout()">Esci</button>
+    </div>
+
+    <div class="header">
+      <div class="subtitle">Saldo attuale</div>
+      <div class="points-display positive" id="pointsDisplay">0</div>
+      <div class="points-label">punti</div>
+    </div>
+
+    <div class="action-card">
+      <h2>Aggiungi o sottrai punti</h2>
+      <div class="field">
+        <label>Punti veloci</label>
+        <div class="presets">
+          <button class="preset-btn" onclick="setPoints(1)">+1</button>
+          <button class="preset-btn" onclick="setPoints(2)">+2</button>
+          <button class="preset-btn" onclick="setPoints(5)">+5</button>
+          <button class="preset-btn" onclick="setPoints(10)">+10</button>
+          <button class="preset-btn" onclick="setPoints(20)">+20</button>
+          <button class="preset-btn" onclick="setPoints(50)">+50</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Quantità</label>
+        <input type="number" id="pointsInput" placeholder="Es. 5" min="1" max="9999"
+          oninput="document.getElementById('fieldError').style.display='none'">
+      </div>
+      <div class="field">
+        <label>Nota (facoltativa)</label>
+        <textarea id="noteInput" placeholder="Es. Ha riordinato la cameretta"></textarea>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-add" onclick="addPoints()" id="btnAdd">+ Aggiungi</button>
+        <button class="btn btn-sub" onclick="subPoints()" id="btnSub">− Sottrai</button>
+      </div>
+      <div id="fieldError"></div>
+    </div>
+
+    <div class="history-card">
+      <div class="history-header">
+        <h2>Storico operazioni</h2>
+        <span id="historyCount" style="font-size:13px; color:#aaa;"></span>
+      </div>
+      <div class="history-list" id="historyList">
+        <div class="history-empty">Nessuna operazione ancora.</div>
+      </div>
+    </div>
+
+    <div class="status-bar" id="statusBar">Pronto</div>
+  </div>
+
+</div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+const CLIENT_ID = '119147025794-3t4q6ei5n8buiv8ess7nbjt91ud3ahqe.apps.googleusercontent.com';
+const SCOPES = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.profile';
+const FILE_NAME = 'borsellino-punti.json';
+
+let accessToken = null;
+let fileId = null;
+let data = { balance: 0, history: [] };
+let tokenClient = null;
+
+function setStatus(msg, type) {
+  const s = document.getElementById('statusBar');
+  s.textContent = msg;
+  s.className = 'status-bar' + (type ? ' ' + type : '');
+}
+
+function updateDisplay() {
+  const el = document.getElementById('pointsDisplay');
+  el.textContent = data.balance;
+  el.className = 'points-display ' + (data.balance >= 0 ? 'positive' : 'negative');
+
+  const list = document.getElementById('historyList');
+  document.getElementById('historyCount').textContent = data.history.length + ' voci';
+
+  if (!data.history.length) {
+    list.innerHTML = '<div class="history-empty">Nessuna operazione ancora.</div>';
+    return;
+  }
+
+  list.innerHTML = [...data.history].reverse().map(item => {
+    const sign = item.delta > 0 ? '+' : '';
+    const cls = item.delta > 0 ? 'pos' : 'neg';
+    const dateStr = new Date(item.date).toLocaleString('it-IT', {
+      day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'
+    });
+    return `<div class="history-item">
+      <div class="history-delta ${cls}">${sign}${item.delta}</div>
+      <div class="history-info">
+        <div class="history-note">${escHtml(item.note || '(nessuna nota)')}</div>
+        <div class="history-date">${dateStr}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function setPoints(n) { document.getElementById('pointsInput').value = n; }
+
+function setBtnsDisabled(v) {
+  document.getElementById('btnAdd').disabled = v;
+  document.getElementById('btnSub').disabled = v;
+}
+
+function showError(msg) {
+  const el = document.getElementById('fieldError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+async function addPoints() {
+  const v = parseInt(document.getElementById('pointsInput').value, 10);
+  if (!v || v <= 0 || isNaN(v)) { showError('Inserisci un numero di punti valido.'); return; }
+  await applyDelta(+v);
+}
+
+async function subPoints() {
+  const v = parseInt(document.getElementById('pointsInput').value, 10);
+  if (!v || v <= 0 || isNaN(v)) { showError('Inserisci un numero di punti valido.'); return; }
+  await applyDelta(-v);
+}
+
+async function applyDelta(delta) {
+  const note = document.getElementById('noteInput').value.trim();
+  setStatus('Salvataggio...', 'syncing');
+  setBtnsDisabled(true);
+
+  data.balance += delta;
+  data.history.push({ delta, note, date: new Date().toISOString() });
+  updateDisplay();
+
+  try {
+    await saveFile();
+    document.getElementById('pointsInput').value = '';
+    document.getElementById('noteInput').value = '';
+    setStatus('Salvato su Google Drive ✓');
+  } catch(e) {
+    data.balance -= delta;
+    data.history.pop();
+    updateDisplay();
+    setStatus('Errore: ' + e.message, 'error');
+  }
+  setBtnsDisabled(false);
+}
+
+async function driveGet(url, opts) {
+  const r = await fetch('https://www.googleapis.com/drive/v3' + url, {
+    ...opts,
+    headers: { Authorization: 'Bearer ' + accessToken, ...(opts && opts.headers) }
+  });
+  if (r.status === 401) { accessToken = null; showLogin(); throw new Error('Sessione scaduta, riaccedi.'); }
+  return r;
+}
+
+async function loadFile() {
+  const r = await driveGet(`/files?spaces=appDataFolder&q=name='${FILE_NAME}'&fields=files(id)`);
+  const json = await r.json();
+  if (json.files && json.files.length > 0) {
+    fileId = json.files[0].id;
+    const dl = await driveGet(`/files/${fileId}?alt=media`);
+    data = await dl.json();
+  } else {
+    fileId = null;
+    data = { balance: 0, history: [] };
+  }
+}
+
+async function saveFile() {
+  const body = JSON.stringify(data, null, 2);
+  const metadata = { name: FILE_NAME, parents: fileId ? undefined : ['appDataFolder'] };
+  const form = new FormData();
+  form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+  form.append('file', new Blob([body], { type: 'application/json' }));
+
+  const url = fileId
+    ? `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart`
+    : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
+  const method = fileId ? 'PATCH' : 'POST';
+
+  const r = await fetch(url, {
+    method,
+    headers: { Authorization: 'Bearer ' + accessToken },
+    body: form
+  });
+  if (!r.ok) { const t = await r.text(); throw new Error(t); }
+  const res = await r.json();
+  if (!fileId) fileId = res.id;
+}
+
+function showLogin() {
+  document.getElementById('loginSection').style.display = '';
+  document.getElementById('appSection').classList.add('section-hidden');
+}
+
+function showApp() {
+  document.getElementById('loginSection').style.display = 'none';
+  document.getElementById('appSection').classList.remove('section-hidden');
+}
+
+function loginGoogle() {
+  if (tokenClient) {
+    tokenClient.requestAccessToken();
+    return;
+  }
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: async (resp) => {
+      if (resp.error) { setStatus('Login fallito: ' + resp.error, 'error'); return; }
+      accessToken = resp.access_token;
+      sessionStorage.setItem('g_token', accessToken);
+      await afterLogin();
+    }
+  });
+  tokenClient.requestAccessToken();
+}
+
+async function afterLogin() {
+  showApp();
+  setStatus('Connessione a Google Drive...', 'syncing');
+  try {
+    const me = await (await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+      headers: { Authorization: 'Bearer ' + accessToken }
+    })).json();
+    document.getElementById('userNameLabel').textContent = (me.name || me.email) + ' · Google Drive';
+  } catch(e) {}
+  try {
+    setStatus('Caricamento dati...', 'syncing');
+    await loadFile();
+    updateDisplay();
+    setStatus('Sincronizzato con Google Drive ✓');
+  } catch(e) {
+    setStatus('Errore caricamento: ' + e.message, 'error');
+  }
+}
+
+function logout() {
+  if (accessToken) google.accounts.oauth2.revoke(accessToken);
+  accessToken = null; fileId = null;
+  data = { balance: 0, history: [] };
+  sessionStorage.removeItem('g_token');
+  showLogin();
+}
+
+window.addEventListener('load', () => {
+  const saved = sessionStorage.getItem('g_token');
+  if (saved) {
+    accessToken = saved;
+    afterLogin();
+  }
+});
+</script>
+</body>
+</html>
