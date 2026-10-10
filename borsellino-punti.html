@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Borsellino Punti — v12 — 2026-10-10 -->
+<!-- Borsellino Punti — v13 — 2026-10-10 -->
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -68,6 +68,16 @@
   .greeting { font-size: 15px; font-weight: 600; color: #1a1a1a; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
   .link-btn { font-size: 12px; font-weight: 400; color: #4285f4; background: none; border: none; cursor: pointer; padding: 0; font-family: inherit; }
   .user-name { font-size: 11px; color: #aaa; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; }
+  /* Grafico */
+  .chart-wrap { position: relative; }
+  .chart-wrap svg { display: block; width: 100%; height: auto; }
+  .chart-tip { position: absolute; pointer-events: none; z-index: 5; background: #1a1a1a; color: #fff;
+               font-size: 12px; line-height: 1.4; padding: 6px 9px; border-radius: 8px;
+               white-space: nowrap; transform: translate(-50%, -100%); }
+  .chart-tip b { font-weight: 600; font-size: 13px; }
+  .chart-note { font-size: 12px; color: #999; margin-top: 10px; line-height: 1.5; }
+  .chart-empty { font-size: 13px; color: #999; padding: 20px 0; text-align: center; }
+
   .profile-list { display: flex; flex-direction: column; gap: 8px; }
   .profile-btn.current { outline: 2px solid #4285f4; outline-offset: -2px; }
   .logout-btn { font-size: 12px; color: #4285f4; background: none; border: none; cursor: pointer; padding: 2px 6px; font-family: inherit; }
@@ -246,6 +256,15 @@
       <div id="historyList">
         <div class="history-empty">Nessuna operazione ancora.</div>
       </div>
+    </div>
+
+    <div class="action-card section-hidden" id="chartCard">
+      <h2>Andamento degli ultimi 30 giorni</h2>
+      <div class="chart-wrap" id="chartWrap">
+        <div id="chart"></div>
+        <div class="chart-tip section-hidden" id="chartTip"></div>
+      </div>
+      <div class="chart-note">Saldo a fine giornata. Tocca il grafico per leggere un giorno.</div>
     </div>
 
     <div class="status-bar" id="statusBar">Pronto</div>
@@ -431,6 +450,7 @@ function renderAll() {
   renderBalance();
   renderQuick();
   renderHistory();
+  renderChart();
   renderPresetList();
   if (openType) renderTypePanel(openType);
 }
@@ -516,6 +536,153 @@ function renderHistory() {
   } else if (hidden > 0) {
     list.innerHTML += `<button class="history-more" onclick="toggleHistory()">Visualizza tutto (${all.length})</button>`;
   }
+}
+
+/* ---------- grafico dell'andamento ----------
+   Una sola serie (il saldo), quindi niente legenda: il titolo la nomina.
+   Il dominio include sempre lo zero, che per un borsellino è il riferimento
+   che conta. Le operazioni più vecchie di 30 giorni contribuiscono comunque,
+   perché il saldo è cumulativo dall'inizio.                                  */
+
+const CHART_DAYS = 30;
+let chartState = null;
+
+function dailyBalances(days) {
+  const items = resolveHistory(data.history || [])
+    .filter(i => !i.voided)
+    .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+
+  const end = new Date();
+  end.setHours(23, 59, 59, 999);
+
+  const out = [];
+  let idx = 0, sum = 0;
+  for (let k = days - 1; k >= 0; k--) {
+    const d = new Date(end);
+    d.setDate(d.getDate() - k);
+    const cutoff = d.getTime();
+    while (idx < items.length && new Date(items[idx].date).getTime() <= cutoff) {
+      sum += items[idx].delta;
+      idx++;
+    }
+    out.push({
+      value: sum,
+      label: d.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }),
+      full: d.toLocaleDateString('it-IT', { weekday: 'short', day: '2-digit', month: 'long' })
+    });
+  }
+  return out;
+}
+
+function niceTicks(lo, hi, count) {
+  const span = (hi - lo) || 1;
+  const mag = Math.pow(10, Math.floor(Math.log10(span / count)));
+  const norm = (span / count) / mag;
+  const step = (norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10) * mag;
+  const ticks = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) ticks.push(Math.round(v));
+  return [...new Set(ticks)];
+}
+
+function renderChart() {
+  const card = document.getElementById('chartCard');
+  const host = document.getElementById('chart');
+  const pts = dailyBalances(CHART_DAYS);
+  const hasData = resolveHistory(data.history || []).some(i => !i.voided);
+
+  if (!hasData) { card.classList.add('section-hidden'); chartState = null; return; }
+  card.classList.remove('section-hidden');
+
+  const W = 320, H = 172, padL = 30, padR = 12, padT = 12, padB = 26;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const values = pts.map(p => p.value);
+  let lo = Math.min(0, ...values), hi = Math.max(0, ...values);
+  if (lo === hi) { hi = lo + 1; }
+  const margin = (hi - lo) * 0.08;
+  if (hi > 0) hi += margin;
+  if (lo < 0) lo -= margin;
+
+  const n = pts.length;
+  const stepX = plotW / (n - 1);
+  const x = i => padL + i * stepX;
+  const y = v => padT + (1 - (v - lo) / (hi - lo)) * plotH;
+
+  const line = pts.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(p.value).toFixed(1)}`).join(' ');
+  const base = y(0);
+  const area = `${line} L${x(n - 1).toFixed(1)} ${base.toFixed(1)} L${x(0).toFixed(1)} ${base.toFixed(1)} Z`;
+
+  const grid = niceTicks(lo, hi, 4).map(v => `
+    <line x1="${padL}" x2="${W - padR}" y1="${y(v).toFixed(1)}" y2="${y(v).toFixed(1)}"
+          stroke="${v === 0 ? '#d8d8d8' : '#eeeeee'}" stroke-width="1"/>
+    <text x="${padL - 6}" y="${(y(v) + 3.5).toFixed(1)}" text-anchor="end"
+          font-size="9" fill="#aaa" style="font-variant-numeric:tabular-nums">${v}</text>`).join('');
+
+  const xLabels = [0, 10, 20, n - 1].map(i => `
+    <text x="${x(i).toFixed(1)}" y="${H - 8}" text-anchor="${i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle'}"
+          font-size="9" fill="#aaa">${pts[i].label}</text>`).join('');
+
+  // Etichetta diretta solo sull'ultimo punto: il valore di oggi.
+  const last = pts[n - 1];
+  const lastColor = last.value >= 0 ? '#16a34a' : '#dc2626';
+  const labelUp = y(last.value) > padT + 16;
+  const labelY = labelUp ? y(last.value) - 8 : y(last.value) + 14;
+
+  host.innerHTML = `
+  <svg viewBox="0 0 ${W} ${H}" role="img"
+       aria-label="Saldo a fine giornata negli ultimi ${CHART_DAYS} giorni: da ${pts[0].value} a ${last.value} punti">
+    ${grid}
+    <path d="${area}" fill="#4285f4" opacity="0.10"/>
+    <path d="${line}" fill="none" stroke="#4285f4" stroke-width="2"
+          stroke-linejoin="round" stroke-linecap="round"/>
+    <line id="chartCursor" y1="${padT}" y2="${padT + plotH}" x1="0" x2="0"
+          stroke="#bbb" stroke-width="1" opacity="0"/>
+    <circle cx="${x(n - 1).toFixed(1)}" cy="${y(last.value).toFixed(1)}" r="3.5"
+            fill="${lastColor}" stroke="#fff" stroke-width="2"/>
+    <text x="${(x(n - 1) - 2).toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="end"
+          font-size="11" font-weight="600" fill="${lastColor}">${last.value}</text>
+    <circle id="chartHoverDot" r="4" fill="#4285f4" stroke="#fff" stroke-width="2" opacity="0"/>
+    ${xLabels}
+  </svg>`;
+
+  chartState = { pts, W, padL, stepX, x, y };
+  attachChartHover();
+}
+
+function attachChartHover() {
+  const svg = document.querySelector('#chart svg');
+  const tip = document.getElementById('chartTip');
+  if (!svg || !chartState) return;
+  const cursor = svg.querySelector('#chartCursor');
+  const dot = svg.querySelector('#chartHoverDot');
+
+  function hide() {
+    tip.classList.add('section-hidden');
+    cursor.setAttribute('opacity', '0');
+    dot.setAttribute('opacity', '0');
+  }
+
+  function show(clientX) {
+    const r = svg.getBoundingClientRect();
+    const scale = r.width / chartState.W;
+    const vx = (clientX - r.left) / scale;
+    let i = Math.round((vx - chartState.padL) / chartState.stepX);
+    i = Math.max(0, Math.min(chartState.pts.length - 1, i));
+    const p = chartState.pts[i];
+    const px = chartState.x(i), py = chartState.y(p.value);
+    cursor.setAttribute('x1', px); cursor.setAttribute('x2', px); cursor.setAttribute('opacity', '1');
+    dot.setAttribute('cx', px); dot.setAttribute('cy', py); dot.setAttribute('opacity', '1');
+    tip.innerHTML = `<b>${p.value}</b> punti<br>${escHtml(p.full)}`;
+    tip.classList.remove('section-hidden');
+    const half = tip.offsetWidth / 2;
+    tip.style.left = Math.max(half, Math.min(r.width - half, px * scale)) + 'px';
+    tip.style.top = Math.max(tip.offsetHeight, py * scale - 8) + 'px';
+  }
+
+  svg.addEventListener('pointerdown', e => show(e.clientX));
+  svg.addEventListener('pointermove', e => { if (e.pointerType === 'mouse' || e.buttons) show(e.clientX); });
+  svg.addEventListener('pointerleave', hide);
+  svg.addEventListener('pointerup', () => setTimeout(hide, 2000));
+  svg.addEventListener('pointercancel', hide);
 }
 
 function renderTypePanel(type) {
