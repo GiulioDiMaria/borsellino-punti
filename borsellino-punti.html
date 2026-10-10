@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Borsellino Punti — v5 — 2026-10-10 -->
+<!-- Borsellino Punti — v6 — 2026-10-10 -->
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -60,8 +60,14 @@
   .status-bar { text-align: center; font-size: 12px; color: #aaa; padding: 12px 0 4px; }
   .status-bar.syncing { color: #4285f4; }
   .status-bar.error { color: #dc2626; }
-  .user-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding: 10px 16px; background: #fff; border-radius: 12px; border: 1px solid #e8e8e8; }
-  .user-name { font-size: 13px; color: #555; }
+  .user-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 16px; padding: 10px 16px; background: #fff; border-radius: 12px; border: 1px solid #e8e8e8; }
+  .user-left { min-width: 0; }
+  .user-right { flex-shrink: 0; white-space: nowrap; }
+  .greeting { font-size: 15px; font-weight: 600; color: #1a1a1a; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .link-btn { font-size: 12px; font-weight: 400; color: #4285f4; background: none; border: none; cursor: pointer; padding: 0; font-family: inherit; }
+  .user-name { font-size: 11px; color: #aaa; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; }
+  .profile-list { display: flex; flex-direction: column; gap: 8px; }
+  .profile-btn.current { outline: 2px solid #4285f4; outline-offset: -2px; }
   .logout-btn { font-size: 12px; color: #4285f4; background: none; border: none; cursor: pointer; padding: 2px 6px; font-family: inherit; }
   .refresh-btn { font-size: 12px; color: #4285f4; background: none; border: none; cursor: pointer; padding: 2px 6px; font-family: inherit; }
   .section-hidden { display: none; }
@@ -146,8 +152,14 @@
 
   <div id="appSection" class="section-hidden">
     <div class="user-row">
-      <span class="user-name" id="userNameLabel">Caricamento...</span>
-      <div>
+      <div class="user-left">
+        <div class="greeting">
+          <span id="greeting">Ciao!</span>
+          <button class="link-btn" data-act="change-user">cambia utente</button>
+        </div>
+        <div class="user-name" id="userNameLabel">Caricamento...</div>
+      </div>
+      <div class="user-right">
         <button class="refresh-btn" onclick="refreshData()">↻ Aggiorna</button>
         <button class="logout-btn" onclick="logout()">Esci</button>
       </div>
@@ -261,9 +273,15 @@ const TYPES = {
   premio:   { label: 'Premio',   sign: -1 }
 };
 
+// L'elenco degli utenti sta nel file su Drive, così è uguale su tutti i telefoni.
+// Chi sei *tu* resta invece su questo telefono (localStorage): è una scelta locale.
+const DEFAULT_PROFILES = ['Papà', 'Mamma'];
+const PROFILE_KEY = 'bp_profilo';
+let currentProfile = null;
+
 let accessToken = null;
 let fileId = null;
-let data = { history: [], presets: [] };
+let data = { history: [], presets: [], profiles: [] };
 let tokenClient = null;
 let openType = null;
 let historyExpanded = false;
@@ -287,8 +305,20 @@ function setStatus(msg, type) {
 }
 
 function currentUser() {
-  const label = document.getElementById('userNameLabel').textContent;
-  return label.split(' · ')[0];
+  return currentProfile || '—';
+}
+
+function activeProfiles() {
+  return (data.profiles && data.profiles.length) ? data.profiles.slice() : DEFAULT_PROFILES.slice();
+}
+
+function mergeProfiles(base, incoming) {
+  const out = (base && base.length) ? base.slice() : DEFAULT_PROFILES.slice();
+  const seen = new Set(out.map(p => p.toLowerCase()));
+  for (const p of (incoming || [])) {
+    if (!seen.has(p.toLowerCase())) { out.push(p); seen.add(p.toLowerCase()); }
+  }
+  return out;
 }
 
 function typeLabel(t) {
@@ -402,11 +432,17 @@ function recentShortcuts(limit) {
 /* ---------- rendering ---------- */
 
 function renderAll() {
+  renderGreeting();
   renderBalance();
   renderQuick();
   renderHistory();
   renderPresetList();
   if (openType) renderTypePanel(openType);
+}
+
+function renderGreeting() {
+  document.getElementById('greeting').textContent =
+    currentProfile ? 'Ciao ' + currentProfile : 'Ciao!';
 }
 
 function renderBalance() {
@@ -542,9 +578,11 @@ function renderPresetList() {
 
 function closeModal() { document.getElementById('modalHost').innerHTML = ''; }
 
-function showModal(title, bodyHtml) {
+function showModal(title, bodyHtml, dismissible) {
+  // Se non è dismissible, toccare fuori non chiude: serve per "Chi sei?".
+  const back = dismissible === false ? '' : ' onclick="if(event.target===this) closeModal()"';
   document.getElementById('modalHost').innerHTML =
-    `<div class="modal-back" onclick="if(event.target===this) closeModal()">
+    `<div class="modal-back"${back}>
        <div class="modal">
          <h3>${escHtml(title)}</h3>
          ${bodyHtml}
@@ -557,6 +595,59 @@ function modalError(msg) {
   if (!el) return;
   el.textContent = msg;
   el.style.display = 'block';
+}
+
+/* ---------- chi sei ---------- */
+
+function openProfileModal(obbligatoria) {
+  const buttons = activeProfiles().map(p =>
+    `<button class="btn btn-neutral profile-btn${p === currentProfile ? ' current' : ''}"
+             data-act="pick-profile" data-id="${escHtml(p)}">${escHtml(p)}</button>`
+  ).join('');
+  showModal('Chi sei?', `
+    <div class="profile-list">
+      ${buttons}
+      <button class="btn btn-neutral" data-act="new-profile">+ Aggiungi altro utente</button>
+      ${obbligatoria ? '' : '<button class="btn btn-neutral" data-act="close-modal">Annulla</button>'}
+    </div>
+    <div class="hint">Serve a segnare nello storico chi registra le operazioni.
+      La scelta resta su questo telefono fino al prossimo accesso.</div>`,
+    !obbligatoria);
+}
+
+function pickProfile(name) {
+  currentProfile = name;
+  try { localStorage.setItem(PROFILE_KEY, name); } catch (e) {}
+  closeModal();
+  renderAll();
+}
+
+function openNewProfileModal() {
+  showModal('Nuovo utente', `
+    <div class="field">
+      <label>Nome</label>
+      <input type="text" id="newProfile" maxlength="20" placeholder="Es. Nonna">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-add" data-act="save-profile">Aggiungi</button>
+      <button class="btn btn-neutral" data-act="back-profile">Indietro</button>
+    </div>
+    <div class="modal-err" id="modalErr"></div>
+    <div class="hint">L'utente aggiunto comparirà anche sull'altro telefono.</div>`, false);
+  const el = document.getElementById('newProfile');
+  if (el) el.focus();
+}
+
+async function saveNewProfile() {
+  const name = (document.getElementById('newProfile').value || '').trim();
+  if (!name) { modalError('Inserisci un nome.'); return; }
+  if (activeProfiles().some(p => p.toLowerCase() === name.toLowerCase())) {
+    modalError('Esiste già un utente con questo nome.'); return;
+  }
+  closeModal();
+  const ok = await commit('Salvataggio...', 'Utente aggiunto ✓', { profiles: [name] });
+  if (ok) pickProfile(name);
+  else openProfileModal(!currentProfile);   // non lasciarlo senza utente
 }
 
 /* ---------- tre tasti tipologia ---------- */
@@ -895,7 +986,8 @@ async function commit(busyMsg, doneMsg, changes) {
     const remote = await loadFileRaw();
     data = {
       history: mergeHistory(remote.history || [], changes.history || []),
-      presets: mergePresets(remote.presets || [], changes.presets || [])
+      presets: mergePresets(remote.presets || [], changes.presets || []),
+      profiles: mergeProfiles(remote.profiles, changes.profiles || [])
     };
     await saveFileRaw(data);
     renderAll();
@@ -926,10 +1018,14 @@ async function loadFileRaw() {
     fileId = json.files[0].id;
     const dl = await driveRequest(`/files/${fileId}?alt=media`);
     const content = await dl.json();
-    return { history: normalizeHistory(content.history), presets: content.presets || [] };
+    return {
+      history: normalizeHistory(content.history),
+      presets: content.presets || [],
+      profiles: content.profiles || []
+    };
   }
   fileId = null;
-  return { history: [], presets: [] };
+  return { history: [], presets: [], profiles: [] };
 }
 
 async function saveFileRaw(payload) {
@@ -1002,8 +1098,11 @@ async function afterLogin() {
   } catch(e) {}
   try {
     data = await loadFileRaw();
+    const saved = (() => { try { return localStorage.getItem(PROFILE_KEY); } catch (e) { return null; } })();
+    currentProfile = activeProfiles().includes(saved) ? saved : null;
     renderAll();
     setStatus('Sincronizzato ✓');
+    openProfileModal(true);   // obbligatoria a ogni accesso
   } catch(e) {
     setStatus('Errore caricamento: ' + e.message, 'error');
   }
@@ -1011,9 +1110,10 @@ async function afterLogin() {
 
 function logout() {
   if (accessToken) google.accounts.oauth2.revoke(accessToken);
-  accessToken = null; fileId = null;
-  data = { history: [], presets: [] };
+  accessToken = null; fileId = null; currentProfile = null;
+  data = { history: [], presets: [], profiles: [] };
   sessionStorage.removeItem('g_token');
+  closeModal();
   showLogin();
 }
 
@@ -1033,6 +1133,12 @@ document.addEventListener('click', (ev) => {
     case 'preset-del':  deletePreset(id); break;
     case 'save-edit':   saveEdit(id); break;
     case 'save-preset': savePreset(id || null); break;
+    case 'change-user': openProfileModal(false); break;
+    case 'pick-profile': pickProfile(id); break;
+    case 'new-profile': openNewProfileModal(); break;
+    case 'save-profile': saveNewProfile(); break;
+    case 'back-profile': openProfileModal(!currentProfile); break;
+    case 'close-modal': closeModal(); break;
   }
 });
 
