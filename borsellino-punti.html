@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Borsellino Punti — v4 — 2026-10-10 -->
+<!-- Borsellino Punti — v5 — 2026-10-10 -->
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -55,6 +55,8 @@
   .icon-btn { background: none; border: none; cursor: pointer; font-size: 14px; padding: 4px 6px; border-radius: 6px; color: #999; font-family: inherit; }
   .icon-btn:active { background: #f0f0f0; }
   .history-empty { padding: 32px 20px; text-align: center; font-size: 14px; color: #aaa; }
+  .history-more { display: block; width: 100%; background: #fafafa; border: none; border-top: 1px solid #f0f0f0; padding: 12px; font-size: 13px; font-weight: 500; color: #4285f4; cursor: pointer; font-family: inherit; }
+  .history-more:active { background: #f0f0f0; }
   .status-bar { text-align: center; font-size: 12px; color: #aaa; padding: 12px 0 4px; }
   .status-bar.syncing { color: #4285f4; }
   .status-bar.error { color: #dc2626; }
@@ -172,6 +174,26 @@
       <div id="typePanel" class="type-panel section-hidden"></div>
     </div>
 
+    <div class="action-card">
+      <details class="collapsible" id="presetSection">
+        <summary>Gestione preimpostati</summary>
+        <div>
+          <div id="presetList"></div>
+          <div class="btn-row" style="margin-top:14px;">
+            <button class="btn btn-neutral" onclick="openPresetModal()">+ Nuovo</button>
+            <button class="btn btn-neutral" onclick="downloadTemplate()">↓ Template</button>
+          </div>
+          <button class="btn btn-neutral" style="margin-top:8px;" onclick="document.getElementById('csvFile').click()">↑ Carica elenco da file</button>
+          <input type="file" id="csvFile" accept=".csv,text/csv" style="display:none" onchange="handleCsvFile(this)">
+          <div class="hint">
+            Scarica il template, aprilo con Excel, compila le righe e ricaricalo:
+            i preimpostati con la stessa tipologia e descrizione vengono aggiornati,
+            gli altri aggiunti.
+          </div>
+        </div>
+      </details>
+    </div>
+
     <div class="action-card" id="quickCard">
       <h2>Usati di recente</h2>
       <div class="quick-list" id="quickList"></div>
@@ -220,26 +242,6 @@
       </div>
     </div>
 
-    <div class="action-card">
-      <details class="collapsible" id="presetSection">
-        <summary>Gestione preimpostati</summary>
-        <div>
-          <div id="presetList"></div>
-          <div class="btn-row" style="margin-top:14px;">
-            <button class="btn btn-neutral" onclick="openPresetModal()">+ Nuovo</button>
-            <button class="btn btn-neutral" onclick="downloadTemplate()">↓ Template</button>
-          </div>
-          <button class="btn btn-neutral" style="margin-top:8px;" onclick="document.getElementById('csvFile').click()">↑ Carica elenco da file</button>
-          <input type="file" id="csvFile" accept=".csv,text/csv" style="display:none" onchange="handleCsvFile(this)">
-          <div class="hint">
-            Scarica il template, aprilo con Excel, compila le righe e ricaricalo:
-            i preimpostati con la stessa tipologia e descrizione vengono aggiornati,
-            gli altri aggiunti.
-          </div>
-        </div>
-      </details>
-    </div>
-
     <div class="status-bar" id="statusBar">Pronto</div>
   </div>
 
@@ -264,6 +266,8 @@ let fileId = null;
 let data = { history: [], presets: [] };
 let tokenClient = null;
 let openType = null;
+let historyExpanded = false;
+const HISTORY_PAGE = 5;
 
 /* ---------- utilità ---------- */
 
@@ -300,6 +304,21 @@ function signedDelta(type, points) {
    Una voce non viene mai modificata sul posto: correzioni e annullamenti
    sono record aggiuntivi che puntano alla voce originale tramite targetId.
    Così il merge fra due telefoni resta una semplice unione per id.      */
+
+/* Le primissime voci furono scritte da una versione che non assegnava un id
+   (salvava solo delta, note e date). Senza id non si possono né annullare né
+   correggere. Qui gliene diamo uno ricavato dal contenuto: è deterministico,
+   quindi entrambi i telefoni calcolano lo stesso id e restano d'accordo. */
+function normalizeHistory(history) {
+  const used = new Map();
+  return (history || []).map(rec => {
+    if (rec && rec.id) return rec;
+    const sig = 'v1_' + rec.date + '_' + rec.delta + '_' + (rec.note || '');
+    const n = (used.get(sig) || 0) + 1;
+    used.set(sig, n);
+    return { ...rec, id: sig + '_' + n };
+  });
+}
 
 function resolveHistory(history) {
   const edits = new Map();
@@ -407,11 +426,16 @@ function renderQuick() {
     const cls = it.delta > 0 ? 'pos' : 'neg';
     const sign = it.delta > 0 ? '+' : '';
     const text = it.note || '(nessuna nota)';
-    return `<button class="quick-btn" onclick="repeatShortcut('${escHtml(it.id)}')">
+    return `<button class="quick-btn" data-act="repeat" data-id="${escHtml(it.id)}">
       <span class="quick-delta ${cls}">${sign}${it.delta}</span>
       <span class="quick-text">${escHtml(text)}</span>
     </button>`;
   }).join('');
+}
+
+function toggleHistory() {
+  historyExpanded = !historyExpanded;
+  renderHistory();
 }
 
 function renderHistory() {
@@ -426,7 +450,12 @@ function renderHistory() {
     return;
   }
 
-  list.innerHTML = [...items].reverse().map(item => {
+  // Chiuso: solo le ultime 5 ancora valide. Aperto: tutto, annullate comprese.
+  const all = [...items].reverse();
+  const shown = historyExpanded ? all : all.filter(i => !i.voided).slice(0, HISTORY_PAGE);
+  const hidden = all.length - shown.length;
+
+  list.innerHTML = shown.map(item => {
     const sign = item.delta > 0 ? '+' : '';
     const cls = item.delta > 0 ? 'pos' : 'neg';
     const dateStr = new Date(item.date).toLocaleString('it-IT', {
@@ -438,9 +467,9 @@ function renderHistory() {
     if (item.edited) bits.push('modificata');
     if (item.voided) bits.push('annullata');
     const actions = item.voided
-      ? `<button class="icon-btn" title="Ripristina" onclick="restoreEntry('${escHtml(item.id)}')">↩</button>`
-      : `<button class="icon-btn" title="Modifica" onclick="openEditModal('${escHtml(item.id)}')">✏️</button>
-         <button class="icon-btn" title="Annulla" onclick="voidEntry('${escHtml(item.id)}')">✕</button>`;
+      ? `<button class="icon-btn" title="Ripristina" data-act="restore" data-id="${escHtml(item.id)}">↩</button>`
+      : `<button class="icon-btn" title="Modifica" data-act="edit" data-id="${escHtml(item.id)}">✏️</button>
+         <button class="icon-btn" title="Annulla" data-act="void" data-id="${escHtml(item.id)}">✕</button>`;
     return `<div class="history-item${item.voided ? ' voided' : ''}">
       <div class="history-delta ${cls}">${sign}${item.delta}</div>
       <div class="history-info">
@@ -450,6 +479,12 @@ function renderHistory() {
       <div class="history-actions">${actions}</div>
     </div>`;
   }).join('');
+
+  if (historyExpanded) {
+    list.innerHTML += `<button class="history-more" onclick="toggleHistory()">Mostra meno</button>`;
+  } else if (hidden > 0) {
+    list.innerHTML += `<button class="history-more" onclick="toggleHistory()">Visualizza tutto (${all.length})</button>`;
+  }
 }
 
 function renderTypePanel(type) {
@@ -496,8 +531,8 @@ function renderPresetList() {
         <div class="pre-type">${escHtml(typeLabel(p.type))}</div>
       </div>
       <div class="history-actions">
-        <button class="icon-btn" title="Modifica" onclick="openPresetModal('${escHtml(p.id)}')">✏️</button>
-        <button class="icon-btn" title="Elimina" onclick="deletePreset('${escHtml(p.id)}')">🗑</button>
+        <button class="icon-btn" title="Modifica" data-act="preset-edit" data-id="${escHtml(p.id)}">✏️</button>
+        <button class="icon-btn" title="Elimina" data-act="preset-del" data-id="${escHtml(p.id)}">🗑</button>
       </div>
     </div>`;
   }).join('');
@@ -613,7 +648,7 @@ async function addEntry(delta, note, type) {
 }
 
 async function voidEntry(id) {
-  if (!confirm('Annullare questa operazione? Il saldo verrà ricalcolato senza di essa.')) return;
+  // Nessuna conferma: l'operazione si ripristina dal tasto ↩ in "Visualizza tutto".
   await commit('Annullamento...', 'Annullata ✓', {
     history: [{ id: uid(), kind: 'void', targetId: id, date: new Date().toISOString(), who: currentUser() }]
   });
@@ -638,7 +673,7 @@ function openEditModal(id) {
       <textarea id="editNote">${escHtml(item.note || '')}</textarea>
     </div>
     <div class="btn-row">
-      <button class="btn btn-add" onclick="saveEdit('${escHtml(id)}')">Salva</button>
+      <button class="btn btn-add" data-act="save-edit" data-id="${escHtml(id)}">Salva</button>
       <button class="btn btn-neutral" onclick="closeModal()">Annulla</button>
     </div>
     <div class="modal-err" id="modalErr"></div>
@@ -682,7 +717,7 @@ function openPresetModal(id) {
       <input type="text" id="preDesc" value="${p ? escHtml(p.description) : ''}" placeholder="Es. Ha riordinato la cameretta">
     </div>
     <div class="btn-row">
-      <button class="btn btn-add" onclick="savePreset(${p ? "'" + escHtml(p.id) + "'" : 'null'})">Salva</button>
+      <button class="btn btn-add" data-act="save-preset" data-id="${p ? escHtml(p.id) : ''}">Salva</button>
       <button class="btn btn-neutral" onclick="closeModal()">Annulla</button>
     </div>
     <div class="modal-err" id="modalErr"></div>`);
@@ -891,7 +926,7 @@ async function loadFileRaw() {
     fileId = json.files[0].id;
     const dl = await driveRequest(`/files/${fileId}?alt=media`);
     const content = await dl.json();
-    return { history: content.history || [], presets: content.presets || [] };
+    return { history: normalizeHistory(content.history), presets: content.presets || [] };
   }
   fileId = null;
   return { history: [], presets: [] };
@@ -981,6 +1016,25 @@ function logout() {
   sessionStorage.removeItem('g_token');
   showLogin();
 }
+
+/* I pulsanti che riguardano una voce precisa portano l'id in un attributo
+   data-id, non dentro l'onclick: una nota con un apostrofo spezzerebbe il
+   codice inline e renderebbe la voce impossibile da annullare. */
+document.addEventListener('click', (ev) => {
+  const el = ev.target.closest('[data-act]');
+  if (!el) return;
+  const id = el.getAttribute('data-id');
+  switch (el.getAttribute('data-act')) {
+    case 'edit':        openEditModal(id); break;
+    case 'void':        voidEntry(id); break;
+    case 'restore':     restoreEntry(id); break;
+    case 'repeat':      repeatShortcut(id); break;
+    case 'preset-edit': openPresetModal(id); break;
+    case 'preset-del':  deletePreset(id); break;
+    case 'save-edit':   saveEdit(id); break;
+    case 'save-preset': savePreset(id || null); break;
+  }
+});
 
 window.addEventListener('load', () => {
   const saved = sessionStorage.getItem('g_token');
