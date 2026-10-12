@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Borsellino Punti — v15 — 2026-10-10 -->
+<!-- Borsellino Punti — v16 — 2026-10-12 -->
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -426,10 +426,14 @@ function mergePresets(base, incoming) {
   return [...byId.values()];
 }
 
+// Ordine: prima per punti crescenti, poi alfabetico a parità di punti.
+// I punti sono salvati in valore assoluto, così l'ordine è lo stesso per
+// tutte e tre le tipologie: dal premio più economico al più caro.
 function activePresets(type) {
   return (data.presets || [])
     .filter(p => !p.deleted && (!type || p.type === type))
-    .sort((a, b) => String(a.description).localeCompare(String(b.description), 'it'));
+    .sort((a, b) => Math.abs(a.points) - Math.abs(b.points)
+                 || String(a.description).localeCompare(String(b.description), 'it'));
 }
 
 /* ---------- scorciatoie: ultime operazioni usate ---------- */
