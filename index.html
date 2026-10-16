@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Borsellino Punti — v17 — 2026-10-14 -->
+<!-- Borsellino Punti — v18 — 2026-10-16 -->
 <html lang="it">
 <head>
 <meta charset="UTF-8">
@@ -188,6 +188,7 @@
         </svg>
         Accedi con Google
       </button>
+      <div class="modal-err" id="loginError" style="margin-top:14px; line-height:1.5;"></div>
     </div>
   </div>
 
@@ -284,7 +285,8 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
 const CLIENT_ID = '119147025794-3t4q6ei5n8buiv8ess7nbjt91ud3ahqe.apps.googleusercontent.com';
-const SCOPES = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.profile';
+const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
+const SCOPES = DRIVE_SCOPE + ' https://www.googleapis.com/auth/userinfo.profile';
 const FILE_NAME = 'borsellino-punti.json';
 
 const TYPES = {
@@ -1188,18 +1190,49 @@ async function commit(busyMsg, doneMsg, changes) {
     setBtnsDisabled(false);
     return true;
   } catch (e) {
-    setStatus('Errore: ' + e.message, 'error');
     setBtnsDisabled(false);
+    if (e.scope) { backToLoginForScope(); return false; }
+    setStatus('Errore: ' + e.message, 'error');
     return false;
   }
 }
 
+/* Traduce l'errore di Google in una frase utile. Il messaggio grezzo dell'API
+   è illeggibile e non dice cosa fare. */
+async function driveError(r) {
+  let dettaglio = '';
+  try {
+    const j = await r.json();
+    dettaglio = (j && j.error && (j.error.message || j.error.status)) || '';
+  } catch (e) {}
+  if (r.status === 403 && /scope|permission|insufficient/i.test(dettaglio)) {
+    return 'Manca il permesso su Google Drive. Premi Esci e riaccedi, '
+         + 'lasciando spuntata la casella del permesso su Drive.';
+  }
+  if (r.status === 403) return 'Google ha rifiutato la richiesta. ' + dettaglio;
+  if (r.status === 404) return 'File dei punti non trovato su Drive.';
+  if (r.status === 429) return 'Troppe richieste a Google. Riprova fra qualche minuto.';
+  if (r.status >= 500) return 'Google non risponde in questo momento. Riprova fra poco.';
+  return 'Errore ' + r.status + (dettaglio ? ': ' + dettaglio : '');
+}
+
+async function driveFailure(r) {
+  const e = new Error(await driveError(r));
+  e.scope = r.status === 403 && /permesso su Google Drive/.test(e.message);
+  return e;
+}
+
+/* Qualsiasi risposta non riuscita deve FERMARE l'operazione.
+   Se un errore di lettura passasse inosservato, l'app lo scambierebbe per
+   "borsellino vuoto" e la scrittura successiva creerebbe un secondo file,
+   mettendo a rischio i dati veri. */
 async function driveRequest(url, opts) {
   const r = await fetch('https://www.googleapis.com/drive/v3' + url, {
     ...opts,
     headers: { Authorization: 'Bearer ' + accessToken, ...(opts && opts.headers) }
   });
   if (r.status === 401) { accessToken = null; showLogin(); throw new Error('Sessione scaduta, riaccedi.'); }
+  if (!r.ok) throw await driveFailure(r);
   return r;
 }
 
@@ -1237,7 +1270,8 @@ async function saveFileRaw(payload) {
     headers: { Authorization: 'Bearer ' + accessToken },
     body: form
   });
-  if (!r.ok) { const t = await r.text(); throw new Error(t); }
+  if (r.status === 401) { accessToken = null; showLogin(); throw new Error('Sessione scaduta, riaccedi.'); }
+  if (!r.ok) throw await driveFailure(r);
   const res = await r.json();
   if (!fileId) fileId = res.id;
 }
@@ -1265,19 +1299,57 @@ function showApp() {
   document.getElementById('appSection').classList.remove('section-hidden');
 }
 
+let needConsent = false;
+
+function showLoginError(msg) {
+  const el = document.getElementById('loginError');
+  if (!el) return;
+  el.textContent = msg || '';
+  el.style.display = msg ? 'block' : 'none';
+}
+
+const MSG_PERMESSO = 'Per salvare i punti serve il permesso su Google Drive. '
+  + 'Premi di nuovo "Accedi con Google" e, nella schermata di Google, '
+  + 'lascia spuntata la casella che riguarda Drive.';
+
+// Riporta al login spiegando cosa manca; alla prossima richiesta Google
+// riproporrà la schermata dei permessi invece della scelta precedente.
+function backToLoginForScope() {
+  needConsent = true;
+  accessToken = null;
+  sessionStorage.removeItem('g_token');
+  closeModal();
+  showLogin();
+  showLoginError(MSG_PERMESSO);
+}
+
 function loginGoogle() {
-  if (tokenClient) { tokenClient.requestAccessToken(); return; }
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: CLIENT_ID,
-    scope: SCOPES,
-    callback: async (resp) => {
-      if (resp.error) { setStatus('Login fallito: ' + resp.error, 'error'); return; }
-      accessToken = resp.access_token;
-      sessionStorage.setItem('g_token', accessToken);
-      await afterLogin();
-    }
-  });
-  tokenClient.requestAccessToken();
+  showLoginError('');
+  if (!tokenClient) {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      callback: async (resp) => {
+        if (resp.error) {
+          showLoginError(resp.error === 'access_denied'
+            ? "Accesso annullato. Per usare l'app serve accedere con Google."
+            : 'Accesso non riuscito (' + resp.error + '). Riprova.');
+          return;
+        }
+        // Google consente di togliere la spunta ai singoli permessi: senza
+        // quello su Drive l'app non può né leggere né salvare i punti.
+        if (!google.accounts.oauth2.hasGrantedAllScopes(resp, DRIVE_SCOPE)) {
+          backToLoginForScope();
+          return;
+        }
+        needConsent = false;
+        accessToken = resp.access_token;
+        sessionStorage.setItem('g_token', accessToken);
+        await afterLogin();
+      }
+    });
+  }
+  tokenClient.requestAccessToken(needConsent ? { prompt: 'consent' } : {});
 }
 
 async function afterLogin() {
@@ -1297,6 +1369,7 @@ async function afterLogin() {
     setStatus('Sincronizzato ✓');
     openProfileModal(true);   // obbligatoria a ogni accesso
   } catch(e) {
+    if (e.scope) { backToLoginForScope(); return; }
     setStatus('Errore caricamento: ' + e.message, 'error');
   }
 }
